@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A31669BF-30F4-47BF-A3CC-7D7C980A417C}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Aoc2022", "src\Aoc2022\Aoc2022.fsproj", "{3D40A6AC-C56F-41E4-BA35-2A0008B97452}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Aoc2022Lib", "src\Aoc2022Lib\Aoc2022Lib.fsproj", "{AB20F5BB-4EB2-48FC-96A7-05F8783B93C0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3D40A6AC-C56F-41E4-BA35-2A0008B97452}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D40A6AC-C56F-41E4-BA35-2A0008B97452}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D40A6AC-C56F-41E4-BA35-2A0008B97452}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D40A6AC-C56F-41E4-BA35-2A0008B97452}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB20F5BB-4EB2-48FC-96A7-05F8783B93C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB20F5BB-4EB2-48FC-96A7-05F8783B93C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB20F5BB-4EB2-48FC-96A7-05F8783B93C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB20F5BB-4EB2-48FC-96A7-05F8783B93C0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3D40A6AC-C56F-41E4-BA35-2A0008B97452} = {A31669BF-30F4-47BF-A3CC-7D7C980A417C}
+		{AB20F5BB-4EB2-48FC-96A7-05F8783B93C0} = {A31669BF-30F4-47BF-A3CC-7D7C980A417C}
+	EndGlobalSection
+EndGlobal

@@ -21,12 +21,16 @@ let main argv =
     let part = results.GetResult <@ Part @>
     let input = results.GetResult <@ Input @>
 
-    let part1_fn =
+    let part1_fn, part2_fn =
         match day with
         | 1 -> "not implemented"
         | _ -> failwith "Invalid day"
 
-    let result = part1_fn
+    let result = 
+        match part with
+        | 1 -> (part1_fn input)
+        | 2 -> (part2_fn input)
+        | _ -> failWith "Invalid part"
 
     printfn "Result: %s" result
     0
