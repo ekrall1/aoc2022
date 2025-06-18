@@ -34,6 +34,8 @@
               jnoortheen.nix-ide
               ionide.ionide-fsharp
               ms-dotnettools.vscode-dotnet-runtime
+              ms-dotnettools.csharp
+              ms-dotnettools.csdevkit
               golang.go
             ];
           }
@@ -56,6 +58,9 @@
 
             export DOTNET_ROOT=${pkgs.dotnet-sdk}
             export PATH="$HOME/.dotnet/tools:$PATH"
+            export IONIDE_CACHE_DIR=$HOME/.cache/ionide
+            mkdir -p $IONIDE_CACHE_DIR
+
 
             if [ ! -f .config/dotnet-tools.json ]; then
               echo "Initializing dotnet tool manifest..."
@@ -68,7 +73,7 @@
               dotnet tool install fantomas
             fi
 
-            dotnet add ./Aoc2022/Aoc2022.fsproj package Argu || true
+            dotnet add ./src/Aoc2022/Aoc2022.fsproj package Argu || true
 
             dotnet tool restore || echo "Could not restore dotnet tools"
           '';

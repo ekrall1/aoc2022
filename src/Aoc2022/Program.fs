@@ -1,16 +1,19 @@
 ﻿open Argu
+open Aoc2022Lib.Dispatch
+open Aoc2022Lib.ReadInput
+
 
 type CLIArguments =
-    | [<Mandatory; AltCommandLine("-d")>] Day of int
-    | [<Mandatory; AltCommandLine("-p")>] Part of int
-    | [<Mandatory; AltCommandLine("-i")>] Input of string
+    | [<Mandatory>] Day of int
+    | [<Mandatory>] Part of int
+    | [<Mandatory>] InputFile of string
 
     interface IArgParserTemplate with
         member s.Usage =
             match s with
             | Day _ -> "Specify the day number."
             | Part _ -> "Specify the part number (1 or 2)."
-            | Input _ -> "Specify the input file path."
+            | InputFile _ -> "Specify the input file path."
 
 [<EntryPoint>]
 let main argv =
@@ -19,18 +22,19 @@ let main argv =
 
     let day = results.GetResult <@ Day @>
     let part = results.GetResult <@ Part @>
-    let input = results.GetResult <@ Input @>
+    let inputFile = results.GetResult <@ InputFile @>
 
-    let part1_fn, part2_fn =
-        match day with
-        | 1 -> "not implemented"
-        | _ -> failwith "Invalid day"
+    let input = read inputFile
 
-    let result = 
-        match part with
-        | 1 -> (part1_fn input)
-        | 2 -> (part2_fn input)
-        | _ -> failWith "Invalid part"
+    match Map.tryFind day runners with
+    | Some runner ->
+        let result =
+            match part with
+            | 1 -> runner.part1 input
+            | 2 -> runner.part2 input
+            | _ -> failwithf "Invalid part: %d" part
+        printfn "Result: %s" result
+    | None ->
+        failwithf "Day %d not implemented" day
 
-    printfn "Result: %s" result
     0

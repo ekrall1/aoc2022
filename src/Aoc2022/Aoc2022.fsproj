@@ -13,4 +13,8 @@
     <PackageReference Include="Argu" Version="6.2.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../Aoc2022Lib/Aoc2022Lib.fsproj" />
+  </ItemGroup>
+
 </Project>

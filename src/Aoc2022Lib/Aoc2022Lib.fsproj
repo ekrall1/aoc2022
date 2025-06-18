@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -6,7 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Library.fs" />
+    <Compile Include="ReadInput.fs" />
+    <Compile Include="Day01.fs" />
+    <Compile Include="Days.fs" />
+    <Compile Include="Dispatch.fs" />
   </ItemGroup>
 
 </Project>
