@@ -23,9 +23,7 @@
           };
         };
 
-        dotnet = with pkgs; [
-          dotnet-sdk
-        ];
+        dotnet = pkgs.dotnet-sdk;
 
         vscode = (
           pkgs.vscode-with-extensions.override {
@@ -45,8 +43,57 @@
           pkgs.azure-cli-extensions.azure-devops
         ];
 
+        arguPkg = pkgs.fetchurl {
+          url = "https://www.nuget.org/api/v2/package/Argu/6.2.5";
+          sha256 = "sha256-5HcZcvco4e8+hgLhzlxk7ZmFVLtZL9LVr7LbmXsLmNU=";
+        };
+
+        localNugetRepo = pkgs.stdenv.mkDerivation {
+          pname = "local-nuget-repo";
+          version = "1.0";
+          unpackPhase = "true";
+          buildPhase = ''
+            mkdir -p $out
+            cp ${arguPkg} $out/MathNet.Numerics.6.2.5.nupkg
+          '';
+          installPhase = "true";
+        };
+
       in
       {
+
+        packages.default = pkgs.stdenv.mkDerivation {
+          name = "aoc2022-build";
+          src = ./.;
+
+          buildInputs = [ dotnet ];
+
+          buildPhase = ''
+                # Write NuGet.Config to add local package source
+                cat > NuGet.Config <<EOF
+            <?xml version="1.0" encoding="utf-8"?>
+            <configuration>
+              <packageSources>
+                <add key="local" value="file://${localNugetRepo}" />
+                <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+              </packageSources>
+            </configuration>
+            EOF
+
+            export DOTNET_NUGET_CONFIG_FILE=$PWD/NuGet.Config
+
+            dotnet restore ./Aoc2022Proj.sln --configfile NuGet.Config
+            dotnet build ./Aoc2022Proj.sln --configuration Release
+          '';
+
+          installPhase = "mkdir -p $out"; # no actual outputs, just needs to succeed
+
+          checkPhase = ''
+            dotnet test ./src/Aoc2022Tests/Aoc2022Tests.fsproj --configuration Release --no-build
+          '';
+          doCheck = true;
+        };
+
         devShells.default = pkgs.mkShell {
           buildInputs = [
             dotnet
@@ -72,8 +119,6 @@
               echo "Installing fantomas..."
               dotnet tool install fantomas
             fi
-
-            dotnet add ./src/Aoc2022/Aoc2022.fsproj package Argu || true
 
             dotnet tool restore || echo "Could not restore dotnet tools"
           '';
