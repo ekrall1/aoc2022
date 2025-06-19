@@ -54,7 +54,7 @@
           unpackPhase = "true";
           buildPhase = ''
             mkdir -p $out
-            cp ${arguPkg} $out/MathNet.Numerics.6.2.5.nupkg
+            cp ${arguPkg} $out/Argu.6.2.5.nupkg
           '';
           installPhase = "true";
         };
