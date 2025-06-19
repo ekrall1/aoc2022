@@ -7,7 +7,7 @@ module Day03 =
             Error $"Input string must have an even number of characters: {s}"
         else
             let half = s.Length / 2
-            Ok (s.Substring(0, half), s.Substring(half))
+            Ok(s.Substring(0, half), s.Substring(half))
 
     let FindCommon (s1: string) (s2: string) : Result<char, string> =
         let rec Search (str1: string) =
@@ -22,8 +22,8 @@ module Day03 =
 
     let ScoreChar (c: char) : Result<int, string> =
         match c with
-        | c when 'a' <= c && c <= 'z' -> Ok (int c - int 'a' + 1)
-        | c when 'A' <= c && c <= 'Z' -> Ok (int c - int 'A' + 27)
+        | c when 'a' <= c && c <= 'z' -> Ok(int c - int 'a' + 1)
+        | c when 'A' <= c && c <= 'Z' -> Ok(int c - int 'A' + 27)
         | _ -> Error $"Invalid character for scoring: {c}"
 
     let ScoreLine (line: string) : Result<int, string> =
@@ -34,20 +34,22 @@ module Day03 =
     let ScoreAllRows (input: list<string>) : Result<int, string> =
         input
         |> List.map ScoreLine
-        |> List.fold (fun acc res ->
-            match acc, res with
-            | Ok sum, Ok score -> Ok (sum + score)
-            | Error e, _ -> Error e
-            | _, Error e -> Error e
-        ) (Ok 0)
+        |> List.fold
+            (fun acc res ->
+                match acc, res with
+                | Ok sum, Ok score -> Ok(sum + score)
+                | Error e, _ -> Error e
+                | _, Error e -> Error e)
+            (Ok 0)
 
 
     let GetGroupsOfThree (input: list<string>) : Result<list<string * string * string>, string> =
         let rec loop lst acc =
             match lst with
             | a :: b :: c :: rest -> loop rest ((a, b, c) :: acc)
-            | [] -> Ok (List.rev acc)
+            | [] -> Ok(List.rev acc)
             | _ -> Error "Input does not contain a multiple of 3 lines"
+
         loop input []
 
     let FindCommonInGroupsOfThree (s1: string) (s2: string) (s3: string) : Result<char, string> =
@@ -57,23 +59,27 @@ module Day03 =
             | _ ->
                 let first = str1.[0]
                 let rest = str1.Substring(1)
-                if s2.Contains(first) && s3.Contains(first) then Ok first
-                else Search rest
+
+                if s2.Contains(first) && s3.Contains(first) then
+                    Ok first
+                else
+                    Search rest
+
         Search s1
 
     let ScoreGroup (s1: string, s2: string, s3: string) : Result<int, string> =
-        FindCommonInGroupsOfThree s1 s2 s3
-        |> Result.bind ScoreChar
+        FindCommonInGroupsOfThree s1 s2 s3 |> Result.bind ScoreChar
 
     let ScoreGroupsOfThree (input: list<string * string * string>) : Result<int, string> =
         input
         |> List.map ScoreGroup
-        |> List.fold (fun acc res ->
-            match acc, res with
-            | Ok sum, Ok score -> Ok (sum + score)
-            | Error e, _ -> Error e
-            | _, Error e -> Error e
-        ) (Ok 0)
+        |> List.fold
+            (fun acc res ->
+                match acc, res with
+                | Ok sum, Ok score -> Ok(sum + score)
+                | Error e, _ -> Error e
+                | _, Error e -> Error e)
+            (Ok 0)
 
     let part1 input =
         match ScoreAllRows input with
@@ -81,10 +87,6 @@ module Day03 =
         | Error msg -> $"Error: {msg}"
 
     let part2 input =
-        match
-            input
-            |> GetGroupsOfThree
-            |> Result.bind ScoreGroupsOfThree
-        with
+        match input |> GetGroupsOfThree |> Result.bind ScoreGroupsOfThree with
         | Ok n -> string n
         | Error msg -> $"Error: {msg}"
