@@ -16,5 +16,6 @@ module Dispatch =
     let runners: Map<int, DayRunner> =
         [
             1, wrap 1
+            2, wrap 2
         ]
         |> Map.ofList
