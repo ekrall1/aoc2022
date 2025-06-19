@@ -38,19 +38,29 @@ module Day04 =
             if isAInB || isBInA then Ok 1 else Ok 0
         | _ -> Error "Row does not have two assignments"
 
-    let ScoreAllRows (input: list<string>) : Result<int, string> =
+    let ScoreSingleRangeAnyOverlap (lst: (int * int) list) : Result<int, string> =
+        match lst with
+        | [ (a1, a2); (b1, b2) ] ->
+            let isAInB = not (a2 < b1 || b2 < a1)
+            if isAInB then Ok 1 else Ok 0
+        | _ -> Error "Row does not have two assignments"
+
+    let ScoreAllRows (input: list<string>) (part: int) : Result<int, string> =
         input
         |> List.map ParseLine
         |> List.fold
             (fun accRes lineRes ->
                 accRes
                 |> Result.bind (fun acc ->
-                    lineRes |> Result.bind ScoreSingleRange |> Result.map (fun score -> acc + score)))
+                    lineRes |> Result.bind (if part = 1 then ScoreSingleRange else ScoreSingleRangeAnyOverlap) |> Result.map (fun score -> acc + score)))
             (Ok 0)
 
     let part1 input =
-        match ScoreAllRows input with
+        match ScoreAllRows input 1 with
         | Ok n -> string n
         | Error msg -> $"Error: {msg}"
 
-    let part2 input = "not implemented"
+    let part2 input =
+        match ScoreAllRows input 2 with
+        | Ok n -> string n
+        | Error msg -> $"Error: {msg}"
