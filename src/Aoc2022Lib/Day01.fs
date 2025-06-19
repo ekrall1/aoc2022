@@ -10,7 +10,7 @@ module Day01 =
     let GetMaxCalories (input: list<string>) : Result<int, string> =
         let rec FindMax (lst: list<string>) (acc: int) (most: int) : Result<int, string> =
             match lst with
-            | [] -> Ok (max acc most)
+            | [] -> Ok(max acc most)
             | hd :: tl ->
                 if hd = "" then
                     FindMax tl 0 (max acc most)
@@ -24,13 +24,12 @@ module Day01 =
     let GetListOfSums (input: list<string>) : Result<list<int>, string> =
         let rec FlattenSums (lst: list<string>) (acc: list<int>) (cur: int) : Result<list<int>, string> =
             match lst with
-            | [] -> Ok (cur :: acc |> List.rev)
+            | [] -> Ok(cur :: acc |> List.rev)
             | hd :: tl ->
                 if hd = "" then
                     FlattenSums tl (cur :: acc) 0
                 else
-                    parseInt hd
-                    |> Result.bind (fun n -> FlattenSums tl acc (cur + n))
+                    parseInt hd |> Result.bind (fun n -> FlattenSums tl acc (cur + n))
 
         FlattenSums input [] 0
 
@@ -38,11 +37,7 @@ module Day01 =
         if List.length lst < n then
             Error $"Not enough data to take top {n} elements"
         else
-            lst
-            |> List.sortDescending
-            |> List.take n
-            |> List.sum
-            |> Ok
+            lst |> List.sortDescending |> List.take n |> List.sum |> Ok
 
 
     let part1 input =
