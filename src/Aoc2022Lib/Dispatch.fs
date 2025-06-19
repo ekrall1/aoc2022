@@ -9,4 +9,5 @@ module Dispatch =
         let p1, p2 = Days.getDay day
         { part1 = p1; part2 = p2 }
 
-    let runners: Map<int, DayRunner> = [ 1, wrap 1; 2, wrap 2; 3, wrap 3 ] |> Map.ofList
+    let runners: Map<int, DayRunner> =
+        [ 1, wrap 1; 2, wrap 2; 3, wrap 3; 4, wrap 4 ] |> Map.ofList

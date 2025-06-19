@@ -1,11 +1,8 @@
 ﻿namespace Aoc2022Lib
 
-module Day01 =
+open Aoc2022Lib.Utils
 
-    let parseInt (s: string) : Result<int, string> =
-        match System.Int32.TryParse s with
-        | true, n -> Ok n
-        | false, _ -> Error $"Invalid integer: '{s}'"
+module Day01 =
 
     let GetMaxCalories (input: list<string>) : Result<int, string> =
         let rec FindMax (lst: list<string>) (acc: int) (most: int) : Result<int, string> =
