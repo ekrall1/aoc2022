@@ -33,8 +33,8 @@ let main argv =
             | 1 -> runner.part1 input
             | 2 -> runner.part2 input
             | _ -> failwithf "Invalid part: %d" part
+
         printfn "Result: %s" result
-    | None ->
-        failwithf "Day %d not implemented" day
+    | None -> failwithf "Day %d not implemented" day
 
     0
