@@ -3,6 +3,4 @@
 open System.IO
 
 module ReadInput =
-    let read path =
-        path |> File.ReadLines |> Seq.toList
-        
+    let read path = path |> File.ReadLines |> Seq.toList
