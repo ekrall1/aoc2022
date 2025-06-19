@@ -11,13 +11,14 @@ module Day03 =
 
     let FindCommon (s1: string) (s2: string) : char =
 
-        let rec Search (str1 : string) : char =
+        let rec Search (str1: string) : char =
             match str1 with
             | "" -> failwith "no characters to check"
-            | _ -> 
+            | _ ->
                 let first = str1.[0]
                 let rest = str1.Substring(1)
                 if s2.Contains(first) then first else Search rest
+
         Search s1
 
     let ScoreChar (c: char) : int =
@@ -26,21 +27,60 @@ module Day03 =
         | c when 'A' <= c && c <= 'Z' -> int c - int 'A' + 27
         | _ -> invalidArg "c" "Character must be a-z or A-Z"
 
-
     let ScoreAllRows (input: list<string>) : int =
-        
+
         let rec FindSum (lst: list<string>) (acc: int) : int =
-            match lst with 
+            match lst with
             | [] -> acc
-            | hd :: tl -> 
-                let cur = hd |> SplitInHalf |> fun (s1, s2) -> FindCommon s1 s2 |> ScoreChar
+            | hd :: tl ->
+                let cur = hd |> SplitInHalf |> (fun (s1, s2) -> FindCommon s1 s2 |> ScoreChar)
                 FindSum tl (acc + cur)
+
         FindSum input 0
 
 
+    let GetGroupsOfThree (input: list<string>) : list<list<string>> =
+
+        let rec MakeGroups (lst: list<string>) (cur: list<string>) (acc: list<list<string>>) : list<list<string>> =
+            match lst with
+            | [] -> acc
+            | hd :: tl ->
+                if cur.Length = 2 then
+                    MakeGroups tl [] ((hd :: cur) :: acc)
+                else
+                    MakeGroups tl (hd :: cur) acc
+
+        MakeGroups input [] []
+
+    let FindCommonInGroupsOfThree (s1: string) (s2: string) (s3: string) : char =
+
+        let rec Search (str1: string) : char =
+            match str1 with
+            | "" -> failwith "no characters to check"
+            | _ ->
+                let first = str1.[0]
+                let rest = str1.Substring(1)
+
+                if s2.Contains(first) && s3.Contains(first) then
+                    first
+                else
+                    Search rest
+
+        Search s1
+
+    let ScoreGroupsOfThree (input: list<list<string>>) : int =
+
+        let rec FindSum (lst: list<list<string>>) (acc: int) : int =
+            match lst with
+            | [] -> acc
+            | hd :: tl ->
+                let cur = hd |> fun l -> FindCommonInGroupsOfThree l.[0] l.[1] l.[2] |> ScoreChar
+                FindSum tl (acc + cur)
+
+        FindSum input 0
 
     let part1 input =
         input |> (fun input -> ScoreAllRows input) |> string
 
     let part2 input =
-        failwith "not implemented yet"
+        input |> GetGroupsOfThree |> ScoreGroupsOfThree |> string
