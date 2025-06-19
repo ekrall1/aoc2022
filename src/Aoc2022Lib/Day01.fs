@@ -10,21 +10,19 @@ module Day01 =
     let GetMaxCalories (input: list<string>) : Result<int, string> =
         let rec FindMax (lst: list<string>) (acc: int) (most: int) : Result<int, string> =
             match lst with
-            | [] -> Ok(max acc most)
+            | [] -> max acc most |> Ok
             | hd :: tl ->
                 if hd = "" then
                     FindMax tl 0 (max acc most)
                 else
-                    match parseInt hd with
-                    | Error e -> Error e
-                    | Ok n -> FindMax tl (acc + n) most
+                    parseInt hd |> Result.bind (fun n -> FindMax tl (acc + n) most)
 
         FindMax input 0 0
 
     let GetListOfSums (input: list<string>) : Result<list<int>, string> =
         let rec FlattenSums (lst: list<string>) (acc: list<int>) (cur: int) : Result<list<int>, string> =
             match lst with
-            | [] -> Ok(cur :: acc |> List.rev)
+            | [] -> cur :: acc |> List.rev |> Ok
             | hd :: tl ->
                 if hd = "" then
                     FlattenSums tl (cur :: acc) 0
