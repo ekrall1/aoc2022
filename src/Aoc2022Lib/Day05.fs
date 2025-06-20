@@ -13,28 +13,42 @@ module Day05 =
     type Directions = list<Direction>
 
 
-    let UpdateStackAt (idx: int) (f: Stack -> Stack) (stacks: Stacks) : Stacks =
-        stacks |> List.mapi (fun i s -> if i = idx then f s else s)
+    let UpdateStackAt index f list =
+        if index < 0 || index >= List.length list then
+            Error $"Index {index} out of bounds"
+        else
+            Ok (list |> List.mapi (fun i x -> if i = index then f x else x))
 
-    let PopAt (index: int) (stacks: Stacks) : Crate * Stacks =
-        match List.item index stacks with
-        | hd :: tl ->
-            let updated = stacks |> List.mapi (fun i s -> if i = index then tl else s)
-            (hd, updated)
-        | [] -> failwithf "Tried to pop from empty stack %d" (index + 1)
+    let TryGet index list =
+        if index < 0 || index >= List.length list then
+            Error $"Index {index} out of bounds"
+        else
+            Ok (List.item index list)
 
-    let PopAtPart2 (n: int) (index: int) (stacks: Stacks) : Crate list * Stacks =
-        let stack = List.item index stacks
-        let toMove = stack |> List.take n
-        let remaining = stack |> List.skip n
-        let updated = stacks |> List.mapi (fun i s -> if i = index then remaining else s)
-        (toMove, updated)
+    let PopAt index stacks =
+        TryGet index stacks
+        |> Result.bind (function
+            | [] -> Error $"Tried to pop from empty stack {index + 1}"
+            | hd :: tl ->
+                UpdateStackAt index (fun _ -> tl) stacks
+                |> Result.map (fun updated -> (hd, updated)))
 
-    let PushAtPart2 (index: int) (crates: Crate list) (stacks: Stacks) : Stacks =
-        stacks |> List.mapi (fun i s -> if i = index then crates @ s else s)
+    let PopAtPart2 n index stacks =
+        TryGet index stacks
+        |> Result.bind (fun stack ->
+            if List.length stack < n then
+                Error $"Not enough crates to move {n} from stack {index + 1}"
+            else
+                let toMove = List.take n stack
+                let remaining = List.skip n stack
+                UpdateStackAt index (fun _ -> remaining) stacks
+                |> Result.map (fun updated -> (toMove, updated)))
 
-    let PushAt (index: int) (crate: Crate) (stacks: Stacks) : Stacks =
-        stacks |> List.mapi (fun i s -> if i = index then crate :: s else s)
+    let PushAt index crate stacks =
+        UpdateStackAt index (fun s -> crate :: s) stacks
+
+    let PushAtPart2 index crates stacks =
+        UpdateStackAt index (fun s -> crates @ s) stacks
 
     let GetNumberOfStacks (stackLines: list<string>) : int =
         stackLines
@@ -79,48 +93,48 @@ module Day05 =
         let directions = GetDirections moveLines
         crates, directions
 
-    let ApplyOneMove (part: int) (stacks: Stacks) (dir: Direction) : Stacks =
-        let count = dir.[0]
-        let fromIdx = dir.[1] - 1
-        let toIdx = dir.[2] - 1
+    let ApplyOneMove part stacks dir : Result<Stacks, string> =
+        match dir with
+        | [count; fromIdx; toIdx] ->
+            let fromIdx = fromIdx - 1
+            let toIdx = toIdx - 1
+            if part = 1 then
+                let rec move i res =
+                    match res with
+                    | Error _ as e -> e
+                    | Ok stacks ->
+                        if i = 0 then Ok stacks
+                        else
+                            PopAt fromIdx stacks
+                            |> Result.bind (fun (crate, s1) -> PushAt toIdx crate s1)
+                            |> move (i - 1)
+                move count (Ok stacks)
+            else
+                PopAtPart2 count fromIdx stacks
+                |> Result.bind (fun (crates, s1) -> PushAtPart2 toIdx crates s1)
+        | _ -> Error $"Invalid direction format: {dir}"
 
-        if part = 1 then
-            let rec move i stacks =
-                if i = 0 then
-                    stacks
-                else
-                    let crate, newStacks =
-                        PopAt fromIdx stacks
 
-                    let updatedStacks = PushAt toIdx crate newStacks
-                    move (i - 1) updatedStacks
+    let ApplyAllMoves directions stacks part : Result<Stacks, string> =
+        List.fold
+            (fun acc dir -> Result.bind (fun stacks -> ApplyOneMove part stacks dir) acc)
+            (Ok stacks)
+            directions
 
-            move count stacks
-        else
-            let (crates, s1) = PopAtPart2 count fromIdx stacks
-            PushAtPart2 toIdx crates s1
-
-
-    let ApplyAllMoves (directions: Directions) (stacks: Stacks) (part: int) : Stacks =
-        directions |> List.fold (ApplyOneMove part) stacks
+    let ResultToTopCrates stacks =
+        stacks
+        |> List.map (function [] -> ' ' | x :: _ -> x)
+        |> System.String.Concat
 
     let part1 input =
         let stacks, directions = ParseInput input
-        let finalStacks = ApplyAllMoves directions stacks 1
-
-        finalStacks
-        |> List.map (function
-            | [] -> ' '
-            | x :: _ -> x)
-        |> System.String.Concat
+        match ApplyAllMoves directions stacks 1 with
+        | Ok finalStacks -> ResultToTopCrates finalStacks
+        | Error msg -> $"Error: {msg}"
 
 
     let part2 input =
         let stacks, directions = ParseInput input
-        let finalStacks = ApplyAllMoves directions stacks 2
-
-        finalStacks
-        |> List.map (function
-            | [] -> ' '
-            | x :: _ -> x)
-        |> System.String.Concat
+        match ApplyAllMoves directions stacks 2 with
+        | Ok finalStacks -> ResultToTopCrates finalStacks
+        | Error msg -> $"Error: {msg}"
