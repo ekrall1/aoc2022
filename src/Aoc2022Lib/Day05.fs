@@ -23,6 +23,16 @@ module Day05 =
             (hd, updated)
         | [] -> failwithf "Tried to pop from empty stack %d" (index + 1)
 
+    let PopAtPart2 (n: int) (index: int) (stacks: Stacks) : Crate list * Stacks =
+        let stack = List.item index stacks
+        let toMove = stack |> List.take n
+        let remaining = stack |> List.skip n
+        let updated = stacks |> List.mapi (fun i s -> if i = index then remaining else s)
+        (toMove, updated)
+
+    let PushAtPart2 (index: int) (crates: Crate list) (stacks: Stacks) : Stacks =
+        stacks |> List.mapi (fun i s -> if i = index then crates @ s else s)
+
     let PushAt (index: int) (crate: Crate) (stacks: Stacks) : Stacks =
         stacks |> List.mapi (fun i s -> if i = index then crate :: s else s)
 
@@ -38,14 +48,15 @@ module Day05 =
         let crateLines = stackLines |> List.tail
 
         let parseLine (line: string) : Crate option list =
-            [0 .. numStacks - 1]
+            [ 0 .. numStacks - 1 ]
             |> List.map (fun i ->
                 let pos = i * 4 + 1
+
                 if pos < line.Length then
                     let ch = line.[pos]
                     if System.Char.IsLetter ch then Some ch else None
-                else None
-            )
+                else
+                    None)
 
         crateLines
         |> List.map parseLine
@@ -68,26 +79,34 @@ module Day05 =
         let directions = GetDirections moveLines
         crates, directions
 
-    let ApplyOneMove (stacks: Stacks) (dir: Direction) : Stacks =
+    let ApplyOneMove (part: int) (stacks: Stacks) (dir: Direction) : Stacks =
         let count = dir.[0]
         let fromIdx = dir.[1] - 1
         let toIdx = dir.[2] - 1
 
-        let rec move i stacks =
-            if i = 0 then stacks
-            else
-                let crate, newStacks = PopAt fromIdx stacks
-                let updatedStacks = PushAt toIdx crate newStacks
-                move (i - 1) updatedStacks
+        if part = 1 then
+            let rec move i stacks =
+                if i = 0 then
+                    stacks
+                else
+                    let crate, newStacks =
+                        PopAt fromIdx stacks
 
-        move count stacks
+                    let updatedStacks = PushAt toIdx crate newStacks
+                    move (i - 1) updatedStacks
 
-    let ApplyAllMoves (directions: Directions) (stacks: Stacks) : Stacks =
-        directions |> List.fold ApplyOneMove stacks
+            move count stacks
+        else
+            let (crates, s1) = PopAtPart2 count fromIdx stacks
+            PushAtPart2 toIdx crates s1
+
+
+    let ApplyAllMoves (directions: Directions) (stacks: Stacks) (part: int) : Stacks =
+        directions |> List.fold (ApplyOneMove part) stacks
 
     let part1 input =
         let stacks, directions = ParseInput input
-        let finalStacks = ApplyAllMoves directions stacks
+        let finalStacks = ApplyAllMoves directions stacks 1
 
         finalStacks
         |> List.map (function
@@ -96,4 +115,12 @@ module Day05 =
         |> System.String.Concat
 
 
-    let part2 input = "not implemented"
+    let part2 input =
+        let stacks, directions = ParseInput input
+        let finalStacks = ApplyAllMoves directions stacks 2
+
+        finalStacks
+        |> List.map (function
+            | [] -> ' '
+            | x :: _ -> x)
+        |> System.String.Concat

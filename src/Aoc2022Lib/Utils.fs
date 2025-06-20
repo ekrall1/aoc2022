@@ -16,8 +16,6 @@ module Utils =
     let pop (stack: 'a list) : ('a * 'a list) option =
         match stack with
         | [] -> None
-        | x :: xs -> Some (x, xs)
+        | x :: xs -> Some(x, xs)
 
-    let push (item: 'a) (stack: 'a list) : 'a list =
-        item :: stack
-
+    let push (item: 'a) (stack: 'a list) : 'a list = item :: stack
