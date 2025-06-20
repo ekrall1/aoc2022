@@ -1,6 +1,5 @@
 ﻿namespace Aoc2022Lib
 
-open Aoc2022Lib.Utils
 open System.Text.RegularExpressions
 
 module Day05 =
