@@ -12,3 +12,12 @@ module Utils =
         | Ok a, Ok b -> Ok(f a b)
         | Error e, _ -> Error e
         | _, Error e -> Error e
+
+    let pop (stack: 'a list) : ('a * 'a list) option =
+        match stack with
+        | [] -> None
+        | x :: xs -> Some (x, xs)
+
+    let push (item: 'a) (stack: 'a list) : 'a list =
+        item :: stack
+

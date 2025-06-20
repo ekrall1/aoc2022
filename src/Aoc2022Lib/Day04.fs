@@ -52,7 +52,14 @@ module Day04 =
             (fun accRes lineRes ->
                 accRes
                 |> Result.bind (fun acc ->
-                    lineRes |> Result.bind (if part = 1 then ScoreSingleRange else ScoreSingleRangeAnyOverlap) |> Result.map (fun score -> acc + score)))
+                    lineRes
+                    |> Result.bind (
+                        if part = 1 then
+                            ScoreSingleRange
+                        else
+                            ScoreSingleRangeAnyOverlap
+                    )
+                    |> Result.map (fun score -> acc + score)))
             (Ok 0)
 
     let part1 input =
