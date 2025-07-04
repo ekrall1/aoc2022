@@ -92,22 +92,24 @@ module Day05 =
         let directions = GetDirections moveLines
         crates, directions
 
+    let rec MoveCrates i fromIdx toIdx res =
+        match res with
+        | Error _ as e -> e
+        | Ok stacks ->
+            if i = 0 then Ok stacks
+            else
+                PopAt fromIdx stacks
+                |> Result.bind (fun (crate, s1) -> PushAt toIdx crate s1)
+                |> MoveCrates (i - 1) fromIdx toIdx
+
+
     let ApplyOneMove part stacks dir : Result<Stacks, string> =
         match dir with
         | [count; fromIdx; toIdx] ->
             let fromIdx = fromIdx - 1
             let toIdx = toIdx - 1
             if part = 1 then
-                let rec move i res =
-                    match res with
-                    | Error _ as e -> e
-                    | Ok stacks ->
-                        if i = 0 then Ok stacks
-                        else
-                            PopAt fromIdx stacks
-                            |> Result.bind (fun (crate, s1) -> PushAt toIdx crate s1)
-                            |> move (i - 1)
-                move count (Ok stacks)
+                MoveCrates count fromIdx toIdx (Ok stacks)
             else
                 PopAtPart2 count fromIdx stacks
                 |> Result.bind (fun (crates, s1) -> PushAtPart2 toIdx crates s1)
