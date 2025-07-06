@@ -125,4 +125,17 @@ module Day07 =
             if levelSum <= 100000L then finalSum <- finalSum + levelSum
         finalSum |> string
 
-    let part2 input = "abc"
+    let part2 input =
+        let graph = InitializeGraph input
+        let totalDiskSpace = 70000000L
+        let unusedDiskSpaceTarget = 30000000L
+        let outerDirectorySize = BFSPart1 "/" graph
+        let targetRemoveSize = unusedDiskSpaceTarget - (totalDiskSpace - outerDirectorySize)
+        let mutable smallest = System.Int64.MaxValue
+
+        for key in graph.Keys do
+            let levelSum = BFSPart1 key graph
+            if levelSum >= targetRemoveSize && levelSum < smallest then
+                smallest <- levelSum
+
+        smallest |> string
