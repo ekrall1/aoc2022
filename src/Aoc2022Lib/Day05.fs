@@ -16,13 +16,13 @@ module Day05 =
         if index < 0 || index >= List.length list then
             Error $"Index {index} out of bounds"
         else
-            Ok (list |> List.mapi (fun i x -> if i = index then f x else x))
+            Ok(list |> List.mapi (fun i x -> if i = index then f x else x))
 
     let TryGet index list =
         if index < 0 || index >= List.length list then
             Error $"Index {index} out of bounds"
         else
-            Ok (List.item index list)
+            Ok(List.item index list)
 
     let PopAt index stacks =
         TryGet index stacks
@@ -40,6 +40,7 @@ module Day05 =
             else
                 let toMove = List.take n stack
                 let remaining = List.skip n stack
+
                 UpdateStackAt index (fun _ -> remaining) stacks
                 |> Result.map (fun updated -> (toMove, updated)))
 
@@ -96,7 +97,8 @@ module Day05 =
         match res with
         | Error _ as e -> e
         | Ok stacks ->
-            if i = 0 then Ok stacks
+            if i = 0 then
+                Ok stacks
             else
                 PopAt fromIdx stacks
                 |> Result.bind (fun (crate, s1) -> PushAt toIdx crate s1)
@@ -105,9 +107,10 @@ module Day05 =
 
     let ApplyOneMove part stacks dir : Result<Stacks, string> =
         match dir with
-        | [count; fromIdx; toIdx] ->
+        | [ count; fromIdx; toIdx ] ->
             let fromIdx = fromIdx - 1
             let toIdx = toIdx - 1
+
             if part = 1 then
                 MoveCrates count fromIdx toIdx (Ok stacks)
             else
@@ -117,18 +120,18 @@ module Day05 =
 
 
     let ApplyAllMoves directions stacks part : Result<Stacks, string> =
-        List.fold
-            (fun acc dir -> Result.bind (fun stacks -> ApplyOneMove part stacks dir) acc)
-            (Ok stacks)
-            directions
+        List.fold (fun acc dir -> Result.bind (fun stacks -> ApplyOneMove part stacks dir) acc) (Ok stacks) directions
 
     let ResultToTopCrates stacks =
         stacks
-        |> List.map (function [] -> ' ' | x :: _ -> x)
+        |> List.map (function
+            | [] -> ' '
+            | x :: _ -> x)
         |> System.String.Concat
 
     let part1 input =
         let stacks, directions = ParseInput input
+
         match ApplyAllMoves directions stacks 1 with
         | Ok finalStacks -> ResultToTopCrates finalStacks
         | Error msg -> $"Error: {msg}"
@@ -136,6 +139,7 @@ module Day05 =
 
     let part2 input =
         let stacks, directions = ParseInput input
+
         match ApplyAllMoves directions stacks 2 with
         | Ok finalStacks -> ResultToTopCrates finalStacks
         | Error msg -> $"Error: {msg}"
