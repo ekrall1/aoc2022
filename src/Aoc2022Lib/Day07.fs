@@ -4,8 +4,6 @@ open System.Text.RegularExpressions
 
 module Day07 =
 
-    // ────────────────────────────── types ────────────────────────────────
-
     type FileSysElement = { name: string; size: int64 }
 
     type Directory =
@@ -15,7 +13,7 @@ module Day07 =
 
     type Graph = Map<string, Directory>
 
-    // ───────────────────── railway helpers (Result<'T, string>) ──────────
+    // railway helpers
 
     module R =
         let inline (>>=) r f = Result.bind f r
@@ -23,7 +21,7 @@ module Day07 =
 
     open R
 
-    // ──────────────────────── parsing input ───────────────────────────
+    // parser
 
     type Cmd =
         | CdRoot
@@ -51,7 +49,7 @@ module Day07 =
         | Regex "^(\d+) (.+)$" [ s; n ] -> Ok(FileListing(n, int64 s))
         | other -> Error($"Unrecognised line: {other}")
 
-    // ─────────────────── helpers ───────────────
+    // helpers
 
     let fullPath parent child =
         if child = "/" then "/"
@@ -109,7 +107,7 @@ module Day07 =
             Ok { state with graph = g1 }
         | NoOp -> Ok state
 
-    // ─────────────────── build graph from input (railway) ───────────────
+    // build graph
 
     let buildGraph (lines: string list) : Result<Graph, string> =
         let initState =
@@ -126,13 +124,10 @@ module Day07 =
 
         lines |> List.fold folder (Ok initState) <!> (fun st -> st.graph)
 
-    // ───────────────────── directory size ─────────────────────────
-
     let rec dirSize (g: Graph) (path: string) : int64 =
         g.[path].elements
         |> List.sumBy (fun e -> if e.size = 0L then dirSize g e.name else e.size)
 
-    // ─────────────────────── solutions ──────────────────────────────────
 
     let part1 (lines: string list) : string =
         match buildGraph lines with
