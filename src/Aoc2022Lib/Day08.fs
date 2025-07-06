@@ -72,6 +72,71 @@ module Day08 =
 
         ctr
 
+    let rec LoopUp (h: int) (grid: Grid) r c acc =
+        if r = 0 then
+            acc
+        else
+            let r' = r - 1
+
+            if grid.[r'][c] >= h then
+                acc + 1
+            else
+                LoopUp h grid r' c (acc + 1)
+
+    let rec LoopDown h (grid: Grid) r c acc rows =
+        if r = rows - 1 then
+            acc
+        else
+            let r' = r + 1
+
+            if grid.[r'][c] >= h then
+                acc + 1
+            else
+                LoopDown h grid r' c (acc + 1) rows
+
+    let rec LoopLeft h (grid: Grid) r c acc =
+        if c = 0 then
+            acc
+        else
+            let c' = c - 1
+
+            if grid.[r][c'] >= h then
+                acc + 1
+            else
+                LoopLeft h grid r c' (acc + 1)
+
+    let rec LoopRight h (grid: Grid) r c acc cols =
+        if c = cols - 1 then
+            acc
+        else
+            let c' = c + 1
+
+            if grid.[r][c'] >= h then
+                acc + 1
+            else
+                LoopRight h grid r c' (acc + 1) cols
+
+
+    let CountVisibilityP2 (grid: Grid) =
+
+        let rows = grid.Length
+        let cols = grid.[0].Length
+        let mutable best = 0
+
+        for r = 0 to rows - 1 do
+            for c = 0 to cols - 1 do
+                let h = grid.[r].[c]
+                let upctr = LoopUp h grid r c 0
+                let downctr = LoopDown h grid r c 0 rows
+                let leftctr = LoopLeft h grid r c 0
+                let rightctr = LoopRight h grid r c 0 cols
+                let score = upctr * downctr * leftctr * rightctr
+
+                if score > best then
+                    best <- score
+
+        best
+
     let part1 (lines: string list) : string =
         let grid = lines |> MakeGrid
         let left, right = LookLeftAndRight grid
@@ -79,4 +144,6 @@ module Day08 =
         CountVisibilityP1 grid left right up down |> string
 
 
-    let part2 (lines: string list) : string = "not implemented"
+    let part2 (lines: string list) : string =
+        let grid = lines |> MakeGrid
+        CountVisibilityP2 grid |> string
