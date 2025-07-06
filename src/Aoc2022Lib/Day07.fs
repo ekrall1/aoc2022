@@ -1,6 +1,8 @@
 ﻿namespace Aoc2022Lib
 
+open Aoc2022Lib.Railway
 open System.Text.RegularExpressions
+
 
 module Day07 =
 
@@ -12,14 +14,6 @@ module Day07 =
           elements: FileSysElement list }
 
     type Graph = Map<string, Directory>
-
-    // railway helpers
-
-    module R =
-        let inline (>>=) r f = Result.bind f r
-        let inline (<!>) r f = Result.map f r
-
-    open R
 
     // parser
 
