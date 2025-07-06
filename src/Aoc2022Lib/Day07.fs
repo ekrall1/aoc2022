@@ -1,141 +1,132 @@
 ﻿namespace Aoc2022Lib
 
-open System.Collections.Generic
 open System.Text.RegularExpressions
 
 module Day07 =
-    (** Part 1 - build a graph and find directory sizes, find all directories <= 100000 *)
 
-    type FileSysElement = { name: string; size: int64 }
+    // ────────────────────────────── domain ────────────────────────────────
+
+    type FileSysElement = { name: string; size: int64 }          // size = 0 ⇒ sub-dir reference
 
     type Directory =
-        { name: string
-          parentDirectory: string
-          elements: FileSysElement list }
+        { name            : string
+          parentDirectory : string
+          elements        : FileSysElement list }
 
+    type Graph = Map<string,Directory>                            // immutable graph
 
-    let BFSPart1 (start: string) (graph: Dictionary<string, Directory>) =
+    // ───────────────────── railway helpers (Result<'T, string>) ──────────
 
-        let mutable sumDirs = 0L
+    module R =
+        let inline (>>=) r f = Result.bind f r
+        let inline (<!>) r f = Result.map f r
 
-        let rec search (stack: string list) (visited: Set<string>) =
-            match stack with
-            | [] -> sumDirs
-            | hd :: tl ->
-                if Set.contains hd visited then
-                    search tl visited
-                else
-                    let visited' = visited.Add hd
-                    let curElements = graph.[hd].elements
-                    let mutable remainingDirs: string list = tl
+    open R
 
-                    for f in curElements do
-                        if f.size <> 0 then
-                            sumDirs <- sumDirs + f.size
-                        else
-                            remainingDirs <- remainingDirs @ [ f.name ]
+    // ──────────────────────── parsing commands ───────────────────────────
 
-                    search remainingDirs visited'
+    type Cmd =
+        | CdRoot
+        | CdUp
+        | CdInto of string               // dir name
+        | DirListing of string           // "dir xyz"
+        | FileListing of string * int64  // "123 foo"
+        | NoOp                           // lines we can ignore (e.g. "$ ls")
 
-        search [ start ] Set.empty
+    let (|Regex|_|) (pat:string) (input:string) =
+        let m = Regex.Match(input, pat)
+        if m.Success then Some (List.tail [ for g in m.Groups -> g.Value ])
+        else None
+
+    let parseLine = function
+        | "$ cd /"                        -> Ok CdRoot
+        | "$ cd .."                       -> Ok CdUp
+        | Regex "^\$ cd (.+)$" [d]        -> Ok(CdInto d)
+        | "$ ls"                          -> Ok NoOp
+        | Regex "^dir (.+)$"   [d]        -> Ok(DirListing d)
+        | Regex "^(\d+) (.+)$" [s; n]    -> Ok(FileListing(n, int64 s))
+        | other                           -> Error ($"Unrecognised line: {other}")
+
+    // ─────────────────── graph manipulation helpers ───────────────
 
     let fullPath parent child =
-        if child = "/" then "/"                       // jump to root
+        if child = "/" then "/"
         elif parent = "/" then "/" + child
         else parent + "/" + child
 
-    let InitializeGraph (input: string list) =
+    let ensureDir path parent (g:Graph) : Graph =
+        match g |> Map.tryFind path with
+        | Some _ -> g
+        | None   -> g |> Map.add path { name = path; parentDirectory = parent; elements = [] }
 
-        let rec executeCommands (lst: string list) (currentLevel: string) (graph: Dictionary<string, Directory>) =
-            match lst with
-            | [] -> graph
-            | hd :: tl ->
-                if hd.StartsWith "$ cd .." then
-                    executeCommands tl graph[currentLevel].parentDirectory graph
-                else if hd.StartsWith "$ cd" then
-                    // "$ cd foo" → dirName = "foo"
-                    let dirName =
-                        hd.Split(' ', System.StringSplitOptions.RemoveEmptyEntries).[2]
-                    let dirPath  = fullPath currentLevel dirName 
+    let addElem dirPath elem (g:Graph) : Graph =
+        g |> Map.change dirPath (function
+            | None -> None
+            | Some d when List.contains elem d.elements -> Some d
+            | Some d -> Some { d with elements = elem :: d.elements })
 
-                    // ── ensure the target directory exists ──────────────────────────────
-                    if graph.ContainsKey dirPath |> not then
-                        graph.[dirPath] <-{ 
-                            name            = dirPath
-                            parentDirectory = currentLevel
-                            elements        = [] 
-                        }
+    // ───────────────────── command interpreter ────────────────
 
-                    // ── add a reference to it in the current directory (if absent) ─────
-                    let curDir = graph.[currentLevel]
-                    let dirRef = { name = dirPath; size = 0 }
+    type State = { cwd: string; graph: Graph }
 
-                    if not (List.contains dirRef curDir.elements) then
-                        graph.[currentLevel] <-
-                            { curDir with elements = dirRef :: curDir.elements }
+    let exec (state:State) cmd : Result<State,string> =
+        match cmd with
+        | CdRoot -> Ok { state with cwd = "/" }
+        | CdUp   -> Ok { state with cwd = state.graph.[state.cwd].parentDirectory }
+        | CdInto dir ->
+            let path = fullPath state.cwd dir
+            let g1   = state.graph |> ensureDir path state.cwd |> addElem state.cwd { name = path; size = 0L }
+            Ok { cwd = path; graph = g1 }
+        | DirListing dir ->
+            let path = fullPath state.cwd dir
+            let g1   = state.graph |> ensureDir path state.cwd |> addElem state.cwd { name = path; size = 0L }
+            Ok { state with graph = g1 }
+        | FileListing(name, size) ->
+            let elem = { name = name; size = size }
+            let g1   = state.graph |> addElem state.cwd elem
+            Ok { state with graph = g1 }
+        | NoOp -> Ok state
 
-                    // ── recurse one level down ─────────────────────────────────────────
-                    executeCommands tl dirPath graph
-                else
-                    if hd.StartsWith "dir " then
-                        let dirName = hd.Split(' ')[1]
-                        let dirPath = fullPath currentLevel dirName
+    // ─────────────────── build graph from input (railway) ───────────────
 
-                        // create the child dir node if brand-new
-                        if graph.ContainsKey dirPath |> not then
-                            graph.[dirPath] <-{ 
-                                name = dirPath
-                                parentDirectory = currentLevel
-                                elements = [] 
-                            }
+    let buildGraph (lines:string list) : Result<Graph,string> =
+        let initState = { cwd = "/"; graph = Map.ofList [ "/", { name="/"; parentDirectory="/"; elements = [] } ] }
 
-                        // add a reference to it in the current directory
-                        let curDir = graph.[currentLevel]
-                        let dirRef = { name = dirPath; size = 0 }
+        let folder res line =
+            res >>= fun st ->
+                parseLine line >>= exec st
 
-                        if List.contains dirRef curDir.elements |> not then
-                            graph.[currentLevel] <-
-                                { curDir with elements = dirRef :: curDir.elements }
+        lines
+        |> List.fold folder (Ok initState)
+        <!> (fun st -> st.graph)
 
-                    else
-                        let m = Regex.Match(hd, @"^[0-9]")
+    // ───────────────────── directory size ─────────────────────────
 
-                        if m.Success then
-                            let parts = hd.Split(" ")
-                            let size: int64 = System.Int64.Parse parts[0]
-                            let newFile = { name = parts[1]; size = size }
-                            let currentDir = graph.[currentLevel]
+    let rec dirSize (g:Graph) (path:string) : int64 =
+        g.[path].elements
+        |> List.sumBy (fun e -> if e.size = 0L then dirSize g e.name else e.size)
 
-                            graph[currentLevel] <-
-                                { currentDir with
-                                    elements = currentDir.elements @ [ newFile ] }
+    // ─────────────────────── solutions ──────────────────────────────────
 
-                    executeCommands tl currentLevel graph
+    let part1 (lines:string list) : string =
+        match buildGraph lines with
+        | Error msg -> failwith msg
+        | Ok g ->
+            g.Keys
+            |> Seq.map (dirSize g)
+            |> Seq.filter (fun s -> s <= 100_000L)
+            |> Seq.sum
+            |> string
 
-        let graph: Dictionary<string, Directory> = Dictionary()
-        graph["/"] <- { name = "/"; parentDirectory = "/"; elements = [] }
-
-        executeCommands input "/" graph
-
-    let part1 input =
-        let graph = InitializeGraph input
-        let mutable finalSum = 0L
-        for key in graph.Keys do
-            let levelSum = BFSPart1 key graph
-            if levelSum <= 100000L then finalSum <- finalSum + levelSum
-        finalSum |> string
-
-    let part2 input =
-        let graph = InitializeGraph input
-        let totalDiskSpace = 70000000L
-        let unusedDiskSpaceTarget = 30000000L
-        let outerDirectorySize = BFSPart1 "/" graph
-        let targetRemoveSize = unusedDiskSpaceTarget - (totalDiskSpace - outerDirectorySize)
-        let mutable smallest = System.Int64.MaxValue
-
-        for key in graph.Keys do
-            let levelSum = BFSPart1 key graph
-            if levelSum >= targetRemoveSize && levelSum < smallest then
-                smallest <- levelSum
-
-        smallest |> string
+    let part2 (lines:string list) : string =
+        match buildGraph lines with
+        | Error msg -> failwith msg
+        | Ok g ->
+            let totalSpace, needFree = 70_000_000L, 30_000_000L
+            let used   = dirSize g "/"
+            let target = needFree - (totalSpace - used)
+            g.Keys
+            |> Seq.map (dirSize g)
+            |> Seq.filter (fun s -> s >= target)
+            |> Seq.min
+            |> string
