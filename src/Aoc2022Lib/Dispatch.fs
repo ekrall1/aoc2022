@@ -10,5 +10,5 @@ module Dispatch =
         { part1 = p1; part2 = p2 }
 
     let runners: Map<int, DayRunner> =
-        [ 1, wrap 1; 2, wrap 2; 3, wrap 3; 4, wrap 4; 5, wrap 5; 6, wrap 6; 7, wrap 7 ]
+        [ 1, wrap 1; 2, wrap 2; 3, wrap 3; 4, wrap 4; 5, wrap 5; 6, wrap 6; 7, wrap 7; 8, wrap 8 ]
         |> Map.ofList
