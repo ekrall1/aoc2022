@@ -17,5 +17,6 @@ module Dispatch =
           5, wrap 5
           6, wrap 6
           7, wrap 7
-          8, wrap 8 ]
+          8, wrap 8
+          9, wrap 9 ]
         |> Map.ofList
