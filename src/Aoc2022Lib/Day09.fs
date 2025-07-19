@@ -35,16 +35,15 @@ module Day09 =
             | 0, 2
             | 0, -2 -> fst tl', snd tl' + sign yDiff * 1
             | _, _ -> fst tl' + sign xDiff * 1, snd tl' + sign yDiff * 1
-            
-        let rec makeNewLst (lst: (int * int) list) (acc: (int * int) list) =
-            match lst with
-            | [] -> acc
-            | hd :: [] -> acc
-            | hd :: tl ->
-                let nxt = follow hd (List.head tl)
-                makeNewLst tl (acc @ [nxt])
 
-        makeNewLst ([hd] @ tl) []
+        let rec makeNewLst prev rest acc =
+            match rest with
+            | [] -> List.rev acc
+            | hd :: tl ->
+                let nxt = follow prev hd
+                makeNewLst nxt tl (nxt :: acc)
+
+        makeNewLst hd tl []
 
 
 
@@ -85,13 +84,17 @@ module Day09 =
         loop lines startP1 startP2 initialVisited
 
     let part1 (lines: string list) : string =
-        let initialHead = (0, 0)
-        let initialTail = [(0, 0)]
+        let initialHead = 0, 0
+        let initialTail = [ (0, 0) ]
 
         match followAllDirections lines initialHead initialTail with
         | Ok s -> s.Count.ToString()
         | Error msg -> failwith msg
 
     let part2 (lines: string list) : string =
-        let initialHead = (0, 0)
-        "Not implemented"
+        let initialHead = 0, 0
+        let initialTail = [ 0, 0; 0, 0; 0, 0; 0, 0; 0, 0; 0, 0; 0, 0; 0, 0; 0, 0 ]
+
+        match followAllDirections lines initialHead initialTail with
+        | Ok s -> s.Count.ToString()
+        | Error msg -> failwith msg
