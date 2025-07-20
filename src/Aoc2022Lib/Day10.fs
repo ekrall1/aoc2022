@@ -1,7 +1,5 @@
 ﻿namespace Aoc2022Lib
 
-open Aoc2022Lib.Railway
-
 
 module Day10 =
 
