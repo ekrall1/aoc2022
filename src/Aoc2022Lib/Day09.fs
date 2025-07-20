@@ -66,7 +66,6 @@ module Day09 =
 
                 getOrientation parts.[0].[0]
                 >>= fun (dx, dy) ->
-                    // Iterate moveSteps times, updating both p1 and p2, and accumulating visited positions
                     let (finalP1, finalP2, visited') =
                         [ 1..moveSteps ]
                         |> List.fold
@@ -79,7 +78,6 @@ module Day09 =
 
                     loop tl finalP1 finalP2 visited'
 
-        // Start with only the initial position of p2 visited
         let initialVisited = Set.empty |> Set.add (List.last startP2)
         loop lines startP1 startP2 initialVisited
 
