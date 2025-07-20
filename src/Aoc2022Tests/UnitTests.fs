@@ -130,4 +130,3 @@ module UnitTests =
         let input = readTestInput "Day10.txt"
         let result = Dispatch.wrap 10 |> fun runner -> runner.part1 input
         Assert.Equal("13140", result)
-
