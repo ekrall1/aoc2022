@@ -65,6 +65,45 @@ module Day11 =
     let parseInput (lines: string list) : Monkey list =
         lines |> (fun x -> splitGroups x [] []) |> List.map parseMonkey
 
-    let part1 (lines: string list) : string = "Not implemented"
+    let applyOperation (op: Operation) (value: int) =
+        match op with
+        | Add n -> value + n
+        | Multiply n -> value * n
+        | Square -> value * value
+
+    let simulate rounds (monkeys: Monkey array) =
+        let inspection = Array.zeroCreate monkeys.Length
+
+        for _ in 1..rounds do
+            for i = 0 to monkeys.Length - 1 do
+                let m = monkeys.[i]
+                inspection.[i] <- inspection.[i] + List.length m.Items
+                monkeys.[i] <- { m with Items = [] }
+
+                for item in m.Items do
+                    let mutable worry = applyOperation m.Operation item
+                    worry <- worry / 3
+
+                    let dest =
+                        if worry % m.Divisor = 0 then
+                            m.TrueMonkey
+                        else
+                            m.FalseMonkey
+
+                    let target = monkeys.[dest]
+
+                    monkeys.[dest] <-
+                        { target with
+                            Items = target.Items @ [ worry ] }
+
+        inspection
+
+    let part1 (lines: string list) : string =
+        let monkeys = parseInput lines |> Array.ofList
+        let inpsections = simulate 20 monkeys
+
+        inpsections
+        |> Array.sortDescending
+        |> fun arr -> (arr.[0] * arr.[1]).ToString()
 
     let part2 (lines: string list) : string = "Not implemented"
