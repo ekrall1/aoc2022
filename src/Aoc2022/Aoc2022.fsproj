@@ -17,4 +17,10 @@
     <ProjectReference Include="../Aoc2022Lib/Aoc2022Lib.fsproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="../Aoc2022Tests/TestInput/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Aoc2022": {
+      "commandName": "Project",
+      "commandLineArgs": "--day 11 --part 1 --inputfile Day11.txt"
+    }
+  }
+}

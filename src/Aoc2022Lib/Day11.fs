@@ -1,10 +1,23 @@
 ﻿namespace Aoc2022Lib
 
+open System
+open System.Text.RegularExpressions
+
 
 module Day11 =
 
-    let part1 (lines: string list) : string =
-        "Not implemented"
+    type Operation =
+        | Add of int
+        | Multiply of int
+        | Square
 
-    let part2 (lines: string list) : string =
-        "Not implemented"
+    type Monkey =
+        { Items: int list
+          Operation: Operation
+          Divisor: int
+          TrueMonkey: int
+          FalseMonkey: int }
+
+    let part1 (lines: string list) : string = "Not implemented"
+
+    let part2 (lines: string list) : string = "Not implemented"
