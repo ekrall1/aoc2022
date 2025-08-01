@@ -7,14 +7,14 @@ open System.Text.RegularExpressions
 module Day11 =
 
     type Operation =
-        | Add of int
-        | Multiply of int
+        | Add of int64
+        | Multiply of int64
         | Square
 
     type Monkey =
-        { Items: int list
+        { Items: int64 list
           Operation: Operation
-          Divisor: int
+          Divisor: int64
           TrueMonkey: int
           FalseMonkey: int }
 
@@ -29,17 +29,20 @@ module Day11 =
 
             match op, rhs with
             | "*", "old" -> Square
-            | "*", n -> Multiply(int n)
-            | "+", n -> Add(int n)
+            | "*", n -> Multiply(int64 n)
+            | "+", n -> Add(int64 n)
             | _ -> failwithf "Unexpected operation: %s" line
 
-    let parseItems (line: string) : int list =
+    let parseItems (line: string) : int64 list =
         line.Substring(line.IndexOf(':') + 1)
         |> fun s -> s.Split(',', StringSplitOptions.RemoveEmptyEntries)
-        |> Array.map (fun s -> s.Trim() |> int)
+        |> Array.map (fun s -> s.Trim() |> int64)
         |> Array.toList
 
-    let parseTest (line: string) : int =
+    let parseTest (line: string) : int64 =
+        line.Trim().Split(' ') |> Array.last |> int64
+
+    let parseTestInt (line: string) : int =
         line.Trim().Split(' ') |> Array.last |> int
 
     let parseMonkey (lines: string list) : Monkey =
@@ -48,8 +51,8 @@ module Day11 =
             { Items = parseItems items
               Operation = parseOperation op
               Divisor = parseTest test
-              TrueMonkey = parseTest ifTrue
-              FalseMonkey = parseTest ifFalse }
+              TrueMonkey = parseTestInt ifTrue
+              FalseMonkey = parseTestInt ifFalse }
         | _ -> failwithf "Invalid monkey block: %A" lines
 
     let rec splitGroups (lines: string list) (current: string list) (acc: string list list) : string list list =
@@ -65,32 +68,32 @@ module Day11 =
     let parseInput (lines: string list) : Monkey list =
         lines |> (fun x -> splitGroups x [] []) |> List.map parseMonkey
 
-    let applyOperation (op: Operation) (value: int) =
+    let applyOperation (op: Operation) (value: int64) =
         match op with
         | Add n -> value + n
         | Multiply n -> value * n
         | Square -> value * value
 
-    let simulate rounds (monkeys: Monkey array) =
-        let inspection = Array.zeroCreate monkeys.Length
+    let simulate (rounds: int) (monkeys: Monkey array) : int64 array =
+        let inspection: int64 array = Array.zeroCreate monkeys.Length
 
         for _ in 1..rounds do
             for i = 0 to monkeys.Length - 1 do
-                let m = monkeys.[i]
-                inspection.[i] <- inspection.[i] + List.length m.Items
+                let m: Monkey = monkeys.[i]
+                inspection.[i] <- inspection.[i] + int64 (List.length m.Items)
                 monkeys.[i] <- { m with Items = [] }
 
-                for item in m.Items do
-                    let mutable worry = applyOperation m.Operation item
-                    worry <- worry / 3
+                for item: int64 in m.Items do
+                    let mutable worry: int64 = applyOperation m.Operation item
+                    worry <- worry / 3L
 
-                    let dest =
-                        if worry % m.Divisor = 0 then
+                    let dest: int =
+                        if worry % m.Divisor = 0L then
                             m.TrueMonkey
                         else
                             m.FalseMonkey
 
-                    let target = monkeys.[dest]
+                    let target: Monkey = monkeys.[dest]
 
                     monkeys.[dest] <-
                         { target with
