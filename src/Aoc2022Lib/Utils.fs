@@ -19,3 +19,10 @@ module Utils =
         | x :: xs -> Some(x, xs)
 
     let push (item: 'a) (stack: 'a list) : 'a list = item :: stack
+
+    let rec gcf (a: int64) (b: int64) : int64 =
+        match b with
+        | 0L -> a
+        | _ -> gcf b (a % b)
+
+    let lcm (a: int64) (b: int64) : int64 = (abs a / gcf (abs a) (abs b)) * abs b
