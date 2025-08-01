@@ -2,6 +2,7 @@
 
 open System
 open System.Text.RegularExpressions
+open Utils
 
 
 module Day11 =
@@ -74,39 +75,48 @@ module Day11 =
         | Multiply n -> value * n
         | Square -> value * value
 
-    let simulate (rounds: int) (monkeys: Monkey array) : int64 array =
-        let inspection: int64 array = Array.zeroCreate monkeys.Length
+    let runRounds rounds (adjust: int64 -> int64) (monkeys: Monkey list) =
+        let ms = monkeys |> List.toArray
+
+        let queues =
+            ms |> Array.map (fun m -> System.Collections.Generic.Queue<int64>(m.Items))
+
+        let inspections = Array.zeroCreate<int64> ms.Length
 
         for _ in 1..rounds do
-            for i = 0 to monkeys.Length - 1 do
-                let m: Monkey = monkeys.[i]
-                inspection.[i] <- inspection.[i] + int64 (List.length m.Items)
-                monkeys.[i] <- { m with Items = [] }
+            for i = 0 to ms.Length - 1 do
+                let q = queues.[i]
 
-                for item: int64 in m.Items do
-                    let mutable worry: int64 = applyOperation m.Operation item
-                    worry <- worry / 3L
+                while q.Count > 0 do
+                    let item = q.Dequeue()
+                    inspections.[i] <- inspections.[i] + 1L
+                    let worry = item |> applyOperation ms.[i].Operation |> adjust
 
-                    let dest: int =
-                        if worry % m.Divisor = 0L then
-                            m.TrueMonkey
+                    let dest =
+                        if worry % ms.[i].Divisor = 0L then
+                            ms.[i].TrueMonkey
                         else
-                            m.FalseMonkey
+                            ms.[i].FalseMonkey
 
-                    let target: Monkey = monkeys.[dest]
+                    queues.[dest].Enqueue(worry)
 
-                    monkeys.[dest] <-
-                        { target with
-                            Items = target.Items @ [ worry ] }
+        inspections
 
-        inspection
 
     let part1 (lines: string list) : string =
-        let monkeys = parseInput lines |> Array.ofList
-        let inpsections = simulate 20 monkeys
+        let monkeys = parseInput lines
+        let inpsections = runRounds 20 (fun x -> x / 3L) monkeys
 
         inpsections
         |> Array.sortDescending
         |> fun arr -> (arr.[0] * arr.[1]).ToString()
 
-    let part2 (lines: string list) : string = "Not implemented"
+    let part2 (lines: string list) : string =
+        let monkeys = parseInput lines
+        let lcmAll = monkeys |> List.map (fun m -> m.Divisor) |> List.reduce lcm
+
+        let inspections = runRounds 10000 (fun x -> x % lcmAll) monkeys
+
+        inspections
+        |> Array.sortDescending
+        |> fun arr -> (arr.[0] * arr.[1]).ToString()
