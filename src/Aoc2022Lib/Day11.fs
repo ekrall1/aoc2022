@@ -66,8 +66,11 @@ module Day11 =
         | "" :: tl -> splitGroups tl [] ((List.rev current) :: acc)
         | hd :: tl -> splitGroups tl (hd :: current) acc
 
-    let parseInput (lines: string list) : Monkey list =
-        lines |> (fun x -> splitGroups x [] []) |> List.map parseMonkey
+    let parseInput (lines: string list) : Result<Monkey list, string> =
+        try
+            lines |> (fun x -> splitGroups x [] []) |> List.map parseMonkey |> Ok
+        with ex ->
+            Error $"parseInput failed: {ex.Message}"
 
     let applyOperation (op: Operation) (value: int64) =
         match op with
@@ -104,19 +107,20 @@ module Day11 =
 
 
     let part1 (lines: string list) : string =
-        let monkeys = parseInput lines
-        let inpsections = runRounds 20 (fun x -> x / 3L) monkeys
-
-        inpsections
-        |> Array.sortDescending
-        |> fun arr -> (arr.[0] * arr.[1]).ToString()
+        parseInput lines
+        |> Result.map (fun monkeys ->
+            let inspections = runRounds 20 (fun x -> x / 3L) monkeys
+            inspections |> Array.sortDescending |> (fun arr -> arr.[0] * arr.[1]) |> string)
+        |> function
+            | Ok result -> result
+            | Error msg -> $"Error: {msg}"
 
     let part2 (lines: string list) : string =
-        let monkeys = parseInput lines
-        let lcmAll = monkeys |> List.map (fun m -> m.Divisor) |> List.reduce lcm
-
-        let inspections = runRounds 10000 (fun x -> x % lcmAll) monkeys
-
-        inspections
-        |> Array.sortDescending
-        |> fun arr -> (arr.[0] * arr.[1]).ToString()
+        parseInput lines
+        |> Result.map (fun monkeys ->
+            let lcmAll = monkeys |> List.map (fun m -> m.Divisor) |> List.reduce lcm
+            let inspections = runRounds 10000 (fun x -> x % lcmAll) monkeys
+            inspections |> Array.sortDescending |> (fun arr -> arr.[0] * arr.[1]) |> string)
+        |> function
+            | Ok result -> result
+            | Error msg -> $"Error: {msg}"
