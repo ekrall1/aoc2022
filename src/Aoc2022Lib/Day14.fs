@@ -95,6 +95,26 @@ let dropSand (cave: Cave) (maxY: int) (sandStart: Point) : Result<Point option, 
     
     fall sandStart
 
+let dropSandWithFloor (cave: Cave) (floorY: int) (sandStart: Point) : Result<Point option, SimulationError> =
+    let rec fall (x, y) =
+        let below = (x, y + 1)
+        let belowLeft = (x - 1, y + 1)
+        let belowRight = (x + 1, y + 1)
+        
+        // Check if we've reached the floor
+        if y + 1 = floorY then
+            Ok (Some (x, y))
+        elif not (Set.contains below cave) then
+            fall below
+        elif not (Set.contains belowLeft cave) then
+            fall belowLeft
+        elif not (Set.contains belowRight cave) then
+            fall belowRight
+        else
+            Ok (Some (x, y))
+    
+    fall sandStart
+
 let simulateSand (cave: Cave) : Result<int, SimulationError> =
     let maxY = findMaxY cave
     let sandStart = (500, 0)
@@ -110,6 +130,25 @@ let simulateSand (cave: Cave) : Result<int, SimulationError> =
     
     simulate cave 0
 
+let simulateSandWithFloor (cave: Cave) : Result<int, SimulationError> =
+    let maxY = findMaxY cave
+    let floorY = maxY + 2  // Floor is 2 units below the lowest rock
+    let sandStart = (500, 0)
+    
+    let rec simulate currentCave count =
+        // Check if the source is blocked
+        if Set.contains sandStart currentCave then
+            Ok count
+        else
+            match dropSandWithFloor currentCave floorY sandStart with
+            | Error err -> Error err
+            | Ok None -> Ok count  // This shouldn't happen but handle it
+            | Ok (Some sandPos) ->
+                let newCave = Set.add sandPos currentCave
+                simulate newCave (count + 1)
+    
+    simulate cave 0
+
 let part1 (lines: string list) : string =
     match buildCave lines with
     | Error (InvalidCoordinate coord) -> $"Error parsing coordinate: {coord}"
@@ -121,5 +160,11 @@ let part1 (lines: string list) : string =
         | Ok count -> string count
 
 let part2 (lines: string list) : string =
-    // Part 2 implementation would go here
-    "Not implemented yet"
+    match buildCave lines with
+    | Error (InvalidCoordinate coord) -> $"Error parsing coordinate: {coord}"
+    | Error (InvalidLine line) -> $"Error parsing line: {line}"
+    | Ok cave ->
+        match simulateSandWithFloor cave with
+        | Error SandFellIntoVoid -> "Error: Sand fell into void (shouldn't happen with floor)"
+        | Error InvalidSandPosition -> "Error: Invalid sand position"
+        | Ok count -> string count
