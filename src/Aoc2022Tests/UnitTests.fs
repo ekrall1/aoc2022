@@ -160,3 +160,9 @@ module UnitTests =
         let input = readTestInput "Day14.txt"
         let result = Dispatch.wrap 14 |> fun runner -> runner.part1 input
         Assert.Equal("24", result)  
+
+    [<Fact>]
+    let ``Day 14 Part 2`` () =
+        let input = readTestInput "Day14.txt"
+        let result = Dispatch.wrap 14 |> fun runner -> runner.part2 input
+        Assert.Equal("93", result)  
