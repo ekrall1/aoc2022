@@ -8,12 +8,8 @@ type Packet =
 
 let rec ofJson (el: JsonElement) : Packet =
     match el.ValueKind with
-    | JsonValueKind.Number -> PInt (el.GetInt32())
-    | JsonValueKind.Array ->
-        el.EnumerateArray()
-        |> Seq.map ofJson
-        |> Seq.toList
-        |> PList
+    | JsonValueKind.Number -> PInt(el.GetInt32())
+    | JsonValueKind.Array -> el.EnumerateArray() |> Seq.map ofJson |> Seq.toList |> PList
     | _ -> failwith "Invalid packet"
 
 let parseLine (line: string) : Packet =
@@ -33,6 +29,7 @@ let rec private comparePackets (left: Packet) (right: Packet) : int =
                 match comparePackets lh rh with
                 | 0 -> loop lt rt
                 | c -> c
+
         loop l r
     | PInt a, PList r -> comparePackets (PList [ PInt a ]) (PList r)
     | PList l, PInt b -> comparePackets (PList l) (PList [ PInt b ])
@@ -43,10 +40,12 @@ let part1 (lines: string list) : string =
         | [] -> List.rev acc
         | l1 :: l2 :: rest ->
             let pair = parseLine l1, parseLine l2
+
             let rest' =
                 match rest with
                 | "" :: tail -> tail
                 | _ -> rest
+
             toPairs (pair :: acc) rest'
         | _ -> failwith "Malformed input"
 
@@ -57,9 +56,7 @@ let part1 (lines: string list) : string =
 
 let part2 (lines: string list) : string =
     let packets =
-        lines
-        |> List.filter (fun line -> line.Trim() <> "")
-        |> List.map parseLine
+        lines |> List.filter (fun line -> line.Trim() <> "") |> List.map parseLine
 
     let divider1 = PList [ PList [ PInt 2 ] ]
     let divider2 = PList [ PList [ PInt 6 ] ]
@@ -67,9 +64,7 @@ let part2 (lines: string list) : string =
     // Add divider packets
     let allPackets = packets @ [ divider1; divider2 ]
 
-    let sorted =
-        allPackets
-        |> List.sortWith comparePackets
+    let sorted = allPackets |> List.sortWith comparePackets
 
     let pos1 = sorted |> List.findIndex ((=) divider1) |> (+) 1
     let pos2 = sorted |> List.findIndex ((=) divider2) |> (+) 1
