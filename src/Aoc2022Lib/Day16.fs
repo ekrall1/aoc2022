@@ -85,11 +85,28 @@ let bfs (start: string) (graph: InputList<string>) : Map<string, int> =
     dist
 
 let dfs (start: string) (graph: InputTable<string, int>) (flowRates: Map<string, int>) (timeLimit: int) =
-    let memo = Dictionary<(string * Set<string> * int), int>()
-    let stack = Stack<string * Set<string> * int * int>()
+    let useful =
+        flowRates
+        |> Seq.choose (fun (KeyValue(k, r)) -> if r > 0 then Some k else None)
+        |> Set.ofSeq
+        |> fun s -> s.Add start // always allow starting valve
+    // Build an index for valves so we can use bit operations
+    let indexOf = Dictionary<string, int>()
+    let mutable nextIdx = 0
+
+    for KeyValue(k, r) in flowRates do
+        if r > 0 then
+            indexOf.[k] <- nextIdx
+            nextIdx <- nextIdx + 1
+
+    let inline isOpen (mask: int) (i: int) = (mask &&& (1 <<< i)) <> 0
+    let inline setOpen (mask: int) (i: int) = mask ||| (1 <<< i)
+
+    let memo = Dictionary<struct (string * int * int), int>()
+    let stack = Stack<string * int * int * int>()
     let mutable best = 0
 
-    stack.Push(start, Set.empty, 0, 0)
+    stack.Push(start, 0, 0, 0)
 
     while stack.Count > 0 do
         let (u, opened, t, released) = stack.Pop()
@@ -100,7 +117,7 @@ let dfs (start: string) (graph: InputTable<string, int>) (flowRates: Map<string,
             if released > best then
                 best <- released
 
-            let key = (u, opened, t)
+            let key = struct (u, opened, t)
 
             match memo.TryGetValue key with
             | true, prev when prev >= released -> () // prune
@@ -112,15 +129,19 @@ let dfs (start: string) (graph: InputTable<string, int>) (flowRates: Map<string,
 
                     // Option 1: open current valve (if beneficial and not opened yet)
                     match Map.tryFind u flowRates with
-                    | Some rate when rate > 0 && not (opened.Contains u) && tNext <= timeLimit ->
+                    | Some rate when rate > 0 && not (isOpen opened indexOf.[u]) && tNext <= timeLimit ->
                         let gain = rate * (timeLimit - tNext)
-                        stack.Push(u, opened.Add u, tNext, released + gain)
+                        let openedMask = setOpen opened indexOf.[u]
+                        stack.Push(u, openedMask, tNext, released + gain)
                     | _ -> ()
 
                     // Option 2: move to neighbors
-                    if tNext <= timeLimit then
-                        for v in graph[u] do
-                            stack.Push(v.Key, opened, t + v.Value, released)
+                    for KeyValue(v, d) in graph.[u] do
+                        if Set.contains v useful then // <-- skip zero-flow nodes
+                            let t2 = t + d
+
+                            if t2 <= timeLimit then
+                                stack.Push(v, opened, t2, released)
 
     best
 
