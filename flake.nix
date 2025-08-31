@@ -89,6 +89,7 @@
           installPhase = "mkdir -p $out"; # no actual outputs, just needs to succeed
 
           checkPhase = ''
+            echo ">>> RUNNING DOTNET TESTS"
             dotnet test ./src/Aoc2022Tests/Aoc2022Tests.fsproj --configuration Release --no-build
           '';
           doCheck = true;
