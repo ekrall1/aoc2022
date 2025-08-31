@@ -26,6 +26,8 @@
   <ItemGroup>
     <Content Include="C:\Users\krall\source\repos\aoc2022\src\Aoc2022Tests\TestInput\Day16.txt" Link="Day16.txt" />
     <Content Include="C:\Users\krall\source\repos\aoc2022\src\Aoc2022Tests\TestInput\Day17.txt" Link="Day17.txt" />
+    <Content Include="C:\Users\krall\source\repos\aoc2022\src\Aoc2022Tests\TestInput\Day18.txt" Link="Day18.txt" />
+    <Content Include="C:\Users\krall\source\repos\aoc2022\src\Aoc2022Tests\TestInput\Day19.txt" Link="Day19.txt" />
   </ItemGroup>
 
 </Project>

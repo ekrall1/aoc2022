@@ -26,8 +26,12 @@
     <Compile Include="Day16.fs" />
     <Compile Include="Day17.fs" />
     <Compile Include="Day18.fs" />
+    <Compile Include="Day19.fs" />
     <Compile Include="Days.fs" />
     <Compile Include="Dispatch.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Google.OrTools" Version="9.14.6206" />
   </ItemGroup>
 
 </Project>

@@ -3,7 +3,6 @@
 /// </summary>
 module Aoc2022Lib.Day18
 
-open System
 open System.Text.RegularExpressions
 
 type Cube = Cube of int * int * int
