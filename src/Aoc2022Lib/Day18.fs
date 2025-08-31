@@ -100,7 +100,7 @@ let updateSearchParams
     (lst: (int * int * int) list)
     (visited: Set<int * int * int>)
     (area: int)
-    (boundary)
+    (boundary: XYZMaxMinCoords)
     (cubeSet: Set<Cube>)
     =
     CubeNeighbors
