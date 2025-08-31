@@ -198,16 +198,15 @@ let addStartupOperateConstraints (solver: Solver) (times: int[]) (startUp: Varia
             for tau = 0 to ti - 1 do
                 c.SetCoefficient(startUp.[tau, ri], -1.0)
 
-let addBuildOnePerMinuteConstraint
-    (solver: Solver)
-    (times: int[])
-    (startUp: Variable[,]) : unit =
+let addBuildOnePerMinuteConstraint (solver: Solver) (times: int[]) (startUp: Variable[,]) : unit =
 
     let robots = Robot.all
     let T, R = times.Length, robots.Length
+
     for ti = 0 to T - 1 do
         // Σ_r startUp[ti, r] ≤ 1
         let c = solver.MakeConstraint(System.Double.NegativeInfinity, 1.0)
+
         for ri = 0 to R - 1 do
             c.SetCoefficient(startUp.[ti, ri], 1.0)
 
@@ -276,8 +275,9 @@ let addEnsureInventoryBeforeStartConstraints
     (times: int[])
     (startUp: Variable[,])
     (inventory: Variable[,])
-    (bp: Blueprint) =
-    
+    (bp: Blueprint)
+    =
+
     let robots = Robot.all
     let T, R = times.Length, robots.Length
 
@@ -285,10 +285,13 @@ let addEnsureInventoryBeforeStartConstraints
         for mi = 0 to R - 1 do
             let c = solver.MakeConstraint(Double.NegativeInfinity, 0.0)
             // Σ_r cost(mineral mi, robot r) * startUp[t, r] - inventory[t-1, mi] ≤ 0
-            c.SetCoefficient(inventory.[t-1, mi], -1.0)
+            c.SetCoefficient(inventory.[t - 1, mi], -1.0)
+
             for ri = 0 to R - 1 do
                 let a = (getCostByRobotType robots.[ri] bp) robots.[mi]
-                if a <> 0.0 then c.SetCoefficient(startUp.[t, ri], a)
+
+                if a <> 0.0 then
+                    c.SetCoefficient(startUp.[t, ri], a)
 
 let setObjectiveMaxGeodes (solver: Solver) (times: int[]) (inventory: Variable[,]) : unit =
 
@@ -300,13 +303,8 @@ let setObjectiveMaxGeodes (solver: Solver) (times: int[]) (inventory: Variable[,
     obj.SetMaximization()
 
 // --------------------- debug -----------------------
-let dumpSchedule
-    (times: int[])
-    (startUp: Variable[,])
-    (operate: Variable[,])
-    (inventory: Variable[,])
-    (bp: Blueprint) =
-    
+let dumpSchedule (times: int[]) (startUp: Variable[,]) (operate: Variable[,]) (inventory: Variable[,]) (bp: Blueprint) =
+
     let robots = Robot.all
     let name r = Robot.toString r
     let T, R = times.Length, robots.Length
@@ -316,52 +314,59 @@ let dumpSchedule
         printfn "  %-8s %s" label (String.Join("  ", cells))
 
     printfn "---- PLAN DUMP ----"
+
     for ti = 0 to T - 1 do
         printfn "t = %d" times.[ti]
 
         // startups at t
         let startCells =
-            [| for ri in 0 .. R - 1 ->
-                 sprintf "%s=%d" (name robots.[ri]) (int (v startUp.[ti, ri])) |]
+            [| for ri in 0 .. R - 1 -> sprintf "%s=%d" (name robots.[ri]) (int (v startUp.[ti, ri])) |]
+
         printRow "start:" startCells
 
         // operate (cumulative active robots) at t
         let opCells =
-            [| for ri in 0 .. R - 1 ->
-                 sprintf "%s=%d" (name robots.[ri]) (int (v operate.[ti, ri])) |]
+            [| for ri in 0 .. R - 1 -> sprintf "%s=%d" (name robots.[ri]) (int (v operate.[ti, ri])) |]
+
         printRow "operate:" opCells
 
         // inventory (ore, clay, obsidian, geode) at t
         let invCells =
-            [| for mi in 0 .. R - 1 ->
-                 sprintf "%s=%d" (name robots.[mi]) (int (v inventory.[ti, mi])) |]
+            [| for mi in 0 .. R - 1 -> sprintf "%s=%d" (name robots.[mi]) (int (v inventory.[ti, mi])) |]
+
         printRow "inv:" invCells
 
         // produced this minute (equal to operate[t,m])
         let prodCells =
-            [| for mi in 0 .. R - 1 ->
-                 sprintf "%s=%d" (name robots.[mi]) (int (v operate.[ti, mi])) |]
+            [| for mi in 0 .. R - 1 -> sprintf "%s=%d" (name robots.[mi]) (int (v operate.[ti, mi])) |]
+
         printRow "prod:" prodCells
 
         // consumed this minute (sum of startup costs at t by mineral)
         let consCells =
             [| for mi in 0 .. R - 1 ->
-                 let mutable s = 0.0
-                 for ri in 0 .. R - 1 do
-                     let a = (getCostByRobotType robots.[ri] bp) robots.[mi]
-                     if a <> 0.0 then s <- s + a * v startUp.[ti, ri]
-                 sprintf "%s=%d" (name robots.[mi]) (int s) |]
+                   let mutable s = 0.0
+
+                   for ri in 0 .. R - 1 do
+                       let a = (getCostByRobotType robots.[ri] bp) robots.[mi]
+
+                       if a <> 0.0 then
+                           s <- s + a * v startUp.[ti, ri]
+
+                   sprintf "%s=%d" (name robots.[mi]) (int s) |]
+
         printRow "cons:" consCells
+
     printfn "--------------"
 
 // --------------------- solve -----------------------
-let solve (blueprint: Blueprint) =
+let solve (blueprint: Blueprint) (timePeriods: int) =
     let solver = Solver.CreateSolver("CBC_MIXED_INTEGER_PROGRAMMING")
 
     if isNull solver then
         failwith "Could not load CBC"
 
-    let times = [| 0..23 |]
+    let times = [| 0 .. (timePeriods - 1) |]
     let robots = Robot.all
 
     // robot startup variables (binary)
@@ -386,7 +391,7 @@ let solve (blueprint: Blueprint) =
 
     match status with
     | Solver.ResultStatus.OPTIMAL
-    | Solver.ResultStatus.FEASIBLE -> 
+    | Solver.ResultStatus.FEASIBLE ->
         dumpSchedule times startUpRobot operateRobot mineralInventory blueprint
         solver.Objective().Value() |> int
     | _ ->
@@ -401,8 +406,18 @@ let part1 (lines: string list) =
         | InvalidLine s -> $"Error parsing line: %s{s}"
         | InvalidLinePattern s -> $"Error parsing line (pattern mismatch): %s{s}"
     | Ok blueprints ->
-        let results = blueprints |> List.map (fun bp -> bp.id * solve bp)
+        let results = blueprints |> List.map (fun bp -> bp.id * solve bp 24)
         let total = results |> List.sum
-        total.ToString()
+        total |> string
 
-let part2 (lines: string list) = "Not implemented"
+let part2 (lines: string list) =
+    match parseInput lines with
+    | Error err ->
+        match err with
+        | InvalidLine s -> $"Error parsing line: %s{s}"
+        | InvalidLinePattern s -> $"Error parsing line (pattern mismatch): %s{s}"
+    | Ok blueprints ->
+        let maxBluePrints = if blueprints.Length < 3 then blueprints.Length else 3
+        let results = blueprints.[.. maxBluePrints - 1] |> List.map (fun bp -> solve bp 32)
+        let total = results |> List.fold (fun acc res -> acc * res) 1
+        total |> string
