@@ -21,4 +21,5 @@ module Days =
         | 15 -> Day15.part1, Day15.part2
         | 16 -> Day16.part1, Day16.part2
         | 17 -> Day17.part1, Day17.part2
+        | 18 -> Day18.part1, Day18.part2
         | _ -> failwithf "Day %d not implemented" day
