@@ -29,9 +29,9 @@ let parseInput (lines: string list) =
 
 let dfsP1 (inputDict: Dictionary<string, string>) =
 
-    let rec loop (queue: string list) =
-        match queue with
-        | [] -> failwith "dfsP1: queue is empty (no node to evaluate)"
+    let rec loop (stack: string list) =
+        match stack with
+        | [] -> failwith "dfsP1: stack is empty (no node to evaluate)"
         | hd :: tl ->
             let cur = inputDict[hd]
 
@@ -40,8 +40,8 @@ let dfsP1 (inputDict: Dictionary<string, string>) =
             | s when Regex(@"^(.*)([-+*\/])(.*)$").IsMatch s ->
                 let m = Regex(@"^(.*)([-+*\/])(.*)$").Match s
                 let op = m.Groups.[2].Value
-                let lhs1 = m.Groups.[1].Value
-                let lhs2 = m.Groups.[3].Value
+                let lhs1 = m.Groups.[1].Value.Trim()
+                let lhs2 = m.Groups.[3].Value.Trim()
 
                 match op with
                 | "+" -> loop (tl @ [ lhs1 ]) + loop (tl @ [ lhs2 ])
