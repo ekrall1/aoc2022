@@ -135,13 +135,11 @@ let solvePart2 (inputDict: Dictionary<string, string>) =
     let mutable humnStart: string = String.Empty
 
     // pass 1 - figure out which side has humn and which is numeric
-    for idx = 0 to sides.Length - 1 do
-        let hasHumn = dependsOnHumn inputDict sides.[idx]
+    let idxH = sides |> List.findIndex (fun side -> dependsOnHumn inputDict side)
+    let idxK = 1 - idxH
 
-        if not hasHumn then
-            target <- dfsP1 inputDict sides.[idx]
-        else
-            humnStart <- sides.[idx]
+    target <- dfsP1 inputDict sides.[idxK]
+    humnStart <- sides.[idxH]
 
     solveNext inputDict humnStart target
 
