@@ -39,20 +39,15 @@ let dfsP1 (inputDict: Dictionary<string, string>) =
             | s when Regex(@"^\d+$").IsMatch s -> int64 s
             | s when Regex(@"^(.*)([-+*\/])(.*)$").IsMatch s ->
                 let m = Regex(@"^(.*)([-+*\/])(.*)$").Match s
+                let op = m.Groups.[2].Value
+                let lhs1 = m.Groups.[1].Value
+                let lhs2 = m.Groups.[3].Value
 
-                match m.Groups[2].Value with
-                | "+" ->
-                    loop (tl @ [ m.Groups.[1].Value.Trim() ])
-                    + loop (tl @ [ m.Groups.[3].Value.Trim() ])
-                | "-" ->
-                    loop (tl @ [ m.Groups.[1].Value.Trim() ])
-                    - loop (tl @ [ m.Groups.[3].Value.Trim() ])
-                | "*" ->
-                    loop (tl @ [ m.Groups.[1].Value.Trim() ])
-                    * loop (tl @ [ m.Groups.[3].Value.Trim() ])
-                | "/" ->
-                    loop (tl @ [ m.Groups.[1].Value.Trim() ])
-                    / loop (tl @ [ m.Groups.[3].Value.Trim() ])
+                match op with
+                | "+" -> loop (tl @ [ lhs1 ]) + loop (tl @ [ lhs2 ])
+                | "-" -> loop (tl @ [ lhs1 ]) - loop (tl @ [ lhs2 ])
+                | "*" -> loop (tl @ [ lhs1 ]) * loop (tl @ [ lhs2 ])
+                | "/" -> loop (tl @ [ lhs1 ]) / loop (tl @ [ lhs2 ])
                 | _ -> failwithf "dfsP1: unknown operator '%s'" s
             | _ -> failwithf "dfsP1: unrecognized expression for '%s'" hd
 
