@@ -28,6 +28,8 @@
     <Content Include="C:\Users\krall\source\repos\aoc2022\src\Aoc2022Tests\TestInput\Day17.txt" Link="Day17.txt" />
     <Content Include="C:\Users\krall\source\repos\aoc2022\src\Aoc2022Tests\TestInput\Day18.txt" Link="Day18.txt" />
     <Content Include="C:\Users\krall\source\repos\aoc2022\src\Aoc2022Tests\TestInput\Day19.txt" Link="Day19.txt" />
+    <Content Include="C:\Users\krall\source\repos\aoc2022\src\Aoc2022Tests\TestInput\Day20.txt" Link="Day20.txt" />
+    <Content Include="C:\Users\krall\source\repos\aoc2022\src\Aoc2022Tests\TestInput\Day21.txt" Link="Day21.txt" />
   </ItemGroup>
 
 </Project>

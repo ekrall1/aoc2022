@@ -27,11 +27,43 @@ let parseInput (lines: string list) =
 
     parseLines lines
 
-let part1 (lines: string list) =
-    let input = parseInput lines
+let dfsP1 (inputDict: Dictionary<string, string>) =
 
-    match input with
-    | Ok -> "Not implemented"
+    let rec loop (queue: string list) =
+        match queue with
+        | [] -> failwith "dfsP1: queue is empty (no node to evaluate)"
+        | hd :: tl ->
+            let cur = inputDict[hd]
+
+            match cur with
+            | s when Regex(@"^\d+$").IsMatch s -> int64 s
+            | s when Regex(@"^(.*)([-+*\/])(.*)$").IsMatch s ->
+                let m = Regex(@"^(.*)([-+*\/])(.*)$").Match s
+
+                match m.Groups[2].Value with
+                | "+" ->
+                    loop (tl @ [ m.Groups.[1].Value.Trim() ])
+                    + loop (tl @ [ m.Groups.[3].Value.Trim() ])
+                | "-" ->
+                    loop (tl @ [ m.Groups.[1].Value.Trim() ])
+                    - loop (tl @ [ m.Groups.[3].Value.Trim() ])
+                | "*" ->
+                    loop (tl @ [ m.Groups.[1].Value.Trim() ])
+                    * loop (tl @ [ m.Groups.[3].Value.Trim() ])
+                | "/" ->
+                    loop (tl @ [ m.Groups.[1].Value.Trim() ])
+                    / loop (tl @ [ m.Groups.[3].Value.Trim() ])
+                | _ -> failwithf "dfsP1: unknown operator '%s'" s
+            | _ -> failwithf "dfsP1: unrecognized expression for '%s'" hd
+
+    loop [ "root" ]
+
+
+let part1 (lines: string list) =
+    let inputDict = parseInput lines
+
+    match inputDict with
+    | Ok d -> dfsP1 d |> string
     | Error e -> $"Error parsing input {e}"
 
 let part2 (lines: string list) = "Not implemented"
