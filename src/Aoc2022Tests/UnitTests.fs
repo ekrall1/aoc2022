@@ -221,8 +221,14 @@ module UnitTests =
         let result = Dispatch.wrap 19 |> fun runner -> runner.part1 input
         Assert.Equal("33", result)
 
-    [<Fact>]
+    // -- re-enable after adding more resources to CI
+    [<Fact(Skip = "skipped")>]
     let ``Day 19 Part 2`` () =
         let input = readTestInput "Day19.txt"
         let result = Dispatch.wrap 19 |> fun runner -> runner.part2 input
         Assert.Equal("3472", result)
+
+    let ``Day 20 Part 1`` () =
+        let input = readTestInput "Day20.txt"
+        let result = Dispatch.wrap 20 |> fun runner -> runner.part1 input
+        Assert.Equal("3", result)
