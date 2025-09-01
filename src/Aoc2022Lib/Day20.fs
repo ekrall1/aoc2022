@@ -5,11 +5,11 @@ module Aoc2022Lib.Day20
 
 open System
 
-let makeInitialList (lines: string list) =
+let makeInitialList (lines: string list) (key: int64) =
     let rec formList (cur: string list) (acc: int64 list) =
         match cur with
         | [] -> acc
-        | hd :: tl -> formList tl ((Int64.Parse hd) :: acc)
+        | hd :: tl -> formList tl ((Int64.Parse hd) * key :: acc)
 
     formList lines [] |> List.rev
 
@@ -39,20 +39,23 @@ let private getDeterminant (zeroIdx: int) (offset: int) (items: ResizeArray<int 
     let idx = (zeroIdx + offset % L) % L
     items.[idx]
 
-let decryptPart1 (lst: int64 list) =
+let decrypt (lst: int64 list) (cycles: int) =
 
     let length = lst.Length
     let items = lst |> List.mapi (fun i v -> (i, v)) |> ResizeArray
-    let atPos = Array.init length id
+    let atPosOrig = Array.init length id
     let mutable zeroIndex = 0
 
-    for idx = 0 to length - 1 do
-        let i = atPos.[idx]
-        let (j, v) = removeItem items atPos i
-        let item = (j, v)
-        let target = (i + int (posMod64 v (int64 (length - 1)))) % (length - 1)
-        addItemAt items atPos item target
-        zeroIndex <- Seq.findIndex (fun (_, v) -> v = 0L) items
+    for _ = 1 to cycles do
+        let atPos = atPosOrig
+
+        for idx = 0 to length - 1 do
+            let i = atPos.[idx]
+            let (j, v) = removeItem items atPos i
+            let item = (j, v)
+            let target = (i + int (posMod64 v (int64 (length - 1)))) % (length - 1)
+            addItemAt items atPos item target
+            zeroIndex <- Seq.findIndex (fun (_, v) -> v = 0L) items
 
     let (_, det1) = getDeterminant zeroIndex 1000 items
     let (_, det2) = getDeterminant zeroIndex 2000 items
@@ -61,7 +64,9 @@ let decryptPart1 (lst: int64 list) =
 
 
 let part1 (lines: string list) =
-    let initialList = makeInitialList lines
-    decryptPart1 initialList |> string
+    let initialList = makeInitialList lines 1L
+    decrypt initialList 1 |> string
 
-let part2 (lines: string list) = "Not implemented"
+let part2 (lines: string list) =
+    let initialList = makeInitialList lines 811589153L
+    decrypt initialList 10 |> string
