@@ -57,7 +57,7 @@ let dfsP1 (inputDict: Dictionary<string, string>) (name: string) =
                 let lhs1 = m.Groups.[1].Value.Trim()
                 let lhs2 = m.Groups.[3].Value.Trim()
                 let humn = Monkey.toString Monkey.Human
-                let hasHumn = (lhs1 = humn) or (lhs2 = humn)
+                let hasHumn = (lhs1 = humn) || (lhs2 = humn)
 
                 match op with
                 | "+" -> loop (tl @ [ lhs1 ]) hasHumn + loop (tl @ [ lhs2 ]) hasHumn
@@ -87,10 +87,11 @@ let dependsOnHumn (inputDict: Dictionary<string, string>) (name: string) =
 
                 let humn = Monkey.toString Monkey.Human
 
-                if (lhs1 = humn) or (lhs2 = humn) then
+                if (lhs1 = humn) || (lhs2 = humn) then
                     true
                 else
                     loop (tl @ [ lhs1; lhs2 ])
+            | _ -> failwith "invalid line"
 
     loop [ name ]
 
