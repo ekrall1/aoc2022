@@ -37,84 +37,169 @@ let directionVectors =
 
 // Get all 8 adjacent positions (including diagonals)
 let getAdjacentPositions (r: int, c: int) : Position list =
-    // TODO: Return all 8 adjacent positions (N, NE, E, SE, S, SW, W, NW)
-    []
+    [ (r - 1, c - 1)
+      (r - 1, c)
+      (r - 1, c + 1)
+      (r, c - 1)
+      (r, c + 1)
+      (r + 1, c - 1)
+      (r + 1, c)
+      (r + 1, c + 1) ]
 
 // Get positions to check for a specific direction
 let getDirectionPositions (pos: Position) (dir: Direction) : Position list =
-    // TODO: Return the 3 positions to check for each direction
-    // North: N, NE, NW
-    // South: S, SE, SW
-    // West: W, NW, SW
-    // East: E, NE, SE
-    []
+    let r, c = pos
+
+    match dir with
+    | North -> [ (r - 1, c - 1); (r - 1, c); (r - 1, c + 1) ]
+    | South -> [ (r + 1, c - 1); (r + 1, c); (r + 1, c + 1) ]
+    | West -> [ (r - 1, c - 1); (r, c - 1); (r + 1, c - 1) ]
+    | East -> [ (r - 1, c + 1); (r, c + 1); (r + 1, c + 1) ]
 
 // Parse the input grid to find initial elf positions
 let parseInput (lines: string list) : Set<Position> =
-    // TODO: Parse the grid and return set of elf positions
-    Set.empty
+    let rec loop (r: int) (acc: Set<Position>) =
+        function
+        | [] -> acc
+        | line :: rest ->
+            let newSet =
+                line
+                |> Seq.mapi (fun c ch -> if ch = '#' then Some(r, c) else None)
+                |> Seq.choose id
+                |> Set.ofSeq
+
+            loop (r + 1) (Set.union acc newSet) rest
+
+    loop 0 Set.empty lines
 
 // Check if any elves are in the given positions
 let hasElvesAt (elves: Set<Position>) (positions: Position list) : bool =
-    // TODO: Check if any of the positions contain elves
-    false
+    List.exists (fun elf -> Set.contains elf elves) positions
 
 // Check if an elf should move (has neighbors)
 let shouldMove (elfPos: Position) (elves: Set<Position>) : bool =
-    // TODO: Check if elf has any neighbors in 8 adjacent positions
-    false
+    let adjacentPositions = getAdjacentPositions (elfPos)
+    hasElvesAt elves adjacentPositions
 
 // Propose a move for an elf based on current direction order
 let proposeMove (elfPos: Position) (elves: Set<Position>) (directionOrder: DirectionSet) : Position option =
-    // TODO: Try each direction in order and return first valid move, or None
-    None
+
+    if not (shouldMove elfPos elves) then
+        None
+    else
+        let rec tryDir (lst: Direction list) =
+            match lst with
+            | [] -> None
+            | hd :: tl ->
+                let neighborElves =
+                    getDirectionPositions elfPos hd |> List.filter (fun x -> Set.contains x elves)
+
+                if neighborElves.Length = 0 then
+                    let dirx, diry = (directionVectors hd)
+                    Some(fst elfPos + dirx, snd elfPos + diry)
+                else
+                    tryDir tl
+
+        tryDir directionOrder
+
 
 // Get all proposed moves for all elves
 let getAllProposedMoves (elves: Set<Position>) (directionOrder: DirectionSet) : Map<Position, Position> =
-    // TODO: Return map of current position -> proposed position for elves that want to move
-    Map.empty
+    elves
+    |> Seq.choose (fun elf ->
+        match (proposeMove elf elves directionOrder) with
+        | Some pos -> Some(elf, pos)
+        | None -> None)
+    |> Map.ofSeq
+
 
 // Filter out conflicting moves (multiple elves proposing same destination)
 let filterConflictingMoves (proposedMoves: Map<Position, Position>) : Map<Position, Position> =
-    // TODO: Remove moves where multiple elves propose the same destination
-    Map.empty
+    proposedMoves
+    |> Map.toSeq
+    |> Seq.groupBy snd
+    |> Seq.filter (fun (_, pairs) -> Seq.length pairs = 1)
+    |> Seq.map (fun (_, pairs) -> Seq.head pairs)
+    |> Map.ofSeq
 
 // Execute the valid moves
 let executeMoves (elves: Set<Position>) (validMoves: Map<Position, Position>) : Set<Position> =
-    // TODO: Apply the valid moves and return new elf positions
-    Set.empty
+    elves
+    |> Set.map (fun elf ->
+        match Map.containsKey elf validMoves with
+        | true -> validMoves.[elf]
+        | false -> elf)
 
 // Rotate the direction order (move first to end)
 let rotateDirections (directions: DirectionSet) : DirectionSet =
-    // TODO: Move first direction to end of list
-    directions
+    List.tail directions @ [ List.head directions ]
 
 // Simulate one round of the diffusion process
 let simulateRound (grove: Grove) : Grove =
-    // TODO: Implement one complete round of the simulation
-    grove
+    let elves = grove.Elves
+    let directions = grove.DirectionOrder
+    let proposed = getAllProposedMoves elves directions
+    let filtered = filterConflictingMoves proposed
+    let finalPositions = executeMoves elves filtered
+
+    { Elves = finalPositions
+      Round = grove.Round + 1
+      DirectionOrder = rotateDirections directions }
 
 // Simulate multiple rounds
 let simulateRounds (initialElves: Set<Position>) (numRounds: int) : Set<Position> =
-    // TODO: Simulate the specified number of rounds
-    initialElves
+    let initialDirections = [ North; South; West; East ]
+
+    let initialGrove =
+        { Elves = initialElves
+          Round = 0
+          DirectionOrder = initialDirections }
+
+    let finalGrove =
+        [ 1..numRounds ] |> List.fold (fun grove _ -> simulateRound grove) initialGrove
+
+    finalGrove.Elves
 
 // Calculate the bounding rectangle of all elves
 let getBoundingRectangle (elves: Set<Position>) : (int * int) * (int * int) =
-    // TODO: Return ((minRow, minCol), (maxRow, maxCol))
-    ((0, 0), (0, 0))
+    let minR = elves |> Seq.minBy fst |> fst
+    let maxR = elves |> Seq.maxBy fst |> fst
+    let minC = elves |> Seq.minBy snd |> snd
+    let maxC = elves |> Seq.maxBy snd |> snd
+    ((minR, minC), (maxR, maxC))
 
 // Count empty ground tiles in the bounding rectangle
 let countEmptyGroundTiles (elves: Set<Position>) : int =
-    // TODO: Calculate empty tiles in bounding rectangle
-    0
+    let boundingBox = getBoundingRectangle elves
+    let x = fst (snd boundingBox) - fst (fst boundingBox) + 1
+    let y = snd (snd boundingBox) - snd (fst boundingBox) + 1
+    x * y - elves.Count
 
 // Part 1: Simulate 10 rounds and count empty ground tiles
 let part1 (lines: string list) : string =
-    // TODO: Implement part 1 solution
-    "0"
+    let initialPositions = parseInput lines
+    let finalElfPositions = simulateRounds initialPositions 10
+    countEmptyGroundTiles finalElfPositions |> string
+
 
 // Part 2: Find the round where no elf moves (placeholder for future)
 let part2 (lines: string list) : string =
-    // TODO: Implement part 2 solution (not described in current problem)
-    "0"
+    let initialPositions = parseInput lines
+
+    let initialGrove =
+        { Elves = initialPositions
+          Round = 0
+          DirectionOrder = [ North; South; West; East ] }
+
+    let rec loop (grove: Grove) =
+        let newGrove = simulateRound grove
+
+        match (grove.Elves = newGrove.Elves) with
+        | true -> newGrove.Round
+        | false ->
+            loop
+                { Elves = newGrove.Elves
+                  Round = newGrove.Round
+                  DirectionOrder = newGrove.DirectionOrder }
+
+    loop initialGrove |> string
