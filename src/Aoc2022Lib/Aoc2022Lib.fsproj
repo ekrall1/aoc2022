@@ -31,6 +31,7 @@
     <Compile Include="Day21.fs" />
     <Compile Include="Day22.fs" />
     <Compile Include="Day23.fs" />
+    <Compile Include="Day24.fs" />
     <Compile Include="Days.fs" />
     <Compile Include="Dispatch.fs" />
   </ItemGroup>
