@@ -31,9 +31,7 @@ let numToSnafu (num: int64) =
         | 0L -> acc
         | _ ->
             let nextIdx = (n + 2L) % 5L
-
             let nextN = if nextIdx < 2L then (n + 5L) / 5L else (n / 5L) // account for carry
-
             let nextAcc = string (snafuRev nextIdx) + acc
             loop nextN nextAcc
 
