@@ -69,8 +69,7 @@ let walls (allLines: string list) =
     let wallSet = loop allLines Set.empty 0
     wallSet, start, goal
 
-/// Parse the input lines into the basin state (walls, blizzards, bounds),
-/// plus infer the start and goal positions.
+/// Parse the input lines
 let parseInput (lines: string list) : Basin * Position * Position =
 
     let rows = List.length lines
@@ -119,7 +118,6 @@ let isCellFree (basin: Basin) ((r, c): Position) : bool =
 let isBlizzardFree (blizzards: Blizzard list) (pos: Position) : bool =
     blizzards |> List.exists (fun b -> pos = b.Pos) |> not
 
-/// Find earliest arrival minute from start->goal starting at time t0
 let earliestArrival
     (basin: Basin)
     (initialBlizzards: Blizzard list)
