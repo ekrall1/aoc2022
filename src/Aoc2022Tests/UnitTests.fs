@@ -285,7 +285,7 @@ module UnitTests =
         Assert.Equal("54", result)
 
     [<Fact>]
-    let ``Day 25 Part 2`` () =
+    let ``Day 25 Part 1`` () =
         let input = readTestInput "Day25.txt"
-        let result = Dispatch.wrap 25 |> fun runner -> runner.part2 input
+        let result = Dispatch.wrap 25 |> fun runner -> runner.part1 input
         Assert.Equal("2=-1=0", result)
